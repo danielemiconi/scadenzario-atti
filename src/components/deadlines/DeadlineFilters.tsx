@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DeadlineFilter, DeadlineStatus } from '../../types';
+import { type DeadlineFilter, DeadlineStatus } from '../../types';
 import { collection, query, getDocs } from 'firebase/firestore';
 import { db } from '../../lib/firebase/config';
 
@@ -77,7 +77,7 @@ export const DeadlineFilters: React.FC<DeadlineFiltersProps> = ({
             id="monthYear"
             value={filters.monthYear || ''}
             onChange={(e) => handleFilterChange('monthYear', e.target.value)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
           >
             <option value="">Tutti</option>
             {monthYears.map((my) => (
@@ -96,7 +96,7 @@ export const DeadlineFilters: React.FC<DeadlineFiltersProps> = ({
             id="initials"
             value={filters.ownerInitials || ''}
             onChange={(e) => handleFilterChange('ownerInitials', e.target.value)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
           >
             <option value="">Tutte</option>
             {initials.map((ini) => (
@@ -115,7 +115,7 @@ export const DeadlineFilters: React.FC<DeadlineFiltersProps> = ({
             id="court"
             value={filters.court || ''}
             onChange={(e) => handleFilterChange('court', e.target.value)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
           >
             <option value="">Tutti</option>
             {courts.map((court) => (
@@ -134,7 +134,7 @@ export const DeadlineFilters: React.FC<DeadlineFiltersProps> = ({
             id="status"
             value={filters.status || ''}
             onChange={(e) => handleFilterChange('status', e.target.value as DeadlineStatus)}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
           >
             <option value="">Tutti</option>
             {Object.values(DeadlineStatus).map((status) => (
@@ -155,7 +155,7 @@ export const DeadlineFilters: React.FC<DeadlineFiltersProps> = ({
             value={filters.searchText || ''}
             onChange={(e) => handleFilterChange('searchText', e.target.value)}
             placeholder="RG, pratica, note..."
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
           />
         </div>
       </div>
@@ -166,14 +166,14 @@ export const DeadlineFilters: React.FC<DeadlineFiltersProps> = ({
             type="checkbox"
             checked={filters.archived || false}
             onChange={(e) => handleFilterChange('archived', e.target.checked)}
-            className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+            className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
           />
           <span className="ml-2 text-sm text-gray-700">Mostra archiviati</span>
         </label>
 
         <button
           onClick={() => onFiltersChange({})}
-          className="text-sm text-primary-600 hover:text-primary-500"
+          className="text-sm text-green-600 hover:text-green-500"
         >
           Reimposta filtri
         </button>

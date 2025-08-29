@@ -1,5 +1,5 @@
 import React from 'react';
-import { Deadline, DeadlineStatus, STATUS_DISPLAY_MAP } from '../../types';
+import { type Deadline, DeadlineStatus, STATUS_DISPLAY_MAP } from '../../types';
 import { format } from 'date-fns';
 import { useAuth } from '../../contexts/AuthContext';
 import { deleteDoc, doc } from 'firebase/firestore';
@@ -35,16 +35,20 @@ export const DeadlineList: React.FC<DeadlineListProps> = ({ deadlines, onEdit })
     if (!status) return 'bg-gray-100 text-gray-800';
     
     switch (status) {
-      case DeadlineStatus.DEPOSITATO:
-        return 'bg-green-100 text-green-800';
+      case DeadlineStatus.FARE:
+        return 'bg-red-100 text-red-800';
+      case DeadlineStatus.NON_FARE:
+        return 'bg-gray-100 text-gray-800';
       case DeadlineStatus.FATTO:
         return 'bg-blue-100 text-blue-800';
-      case DeadlineStatus.RINVIATA:
+      case DeadlineStatus.DEPOSITARE:
         return 'bg-yellow-100 text-yellow-800';
+      case DeadlineStatus.NOTIFICARE:
+        return 'bg-orange-100 text-orange-800';
+      case DeadlineStatus.DEPOSITATO:
+        return 'bg-green-100 text-green-800';
       case DeadlineStatus.NOTIFICATO:
         return 'bg-purple-100 text-purple-800';
-      case DeadlineStatus.PENDENTE:
-        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -124,7 +128,7 @@ export const DeadlineList: React.FC<DeadlineListProps> = ({ deadlines, onEdit })
               <td className="px-3 py-4 whitespace-nowrap text-sm font-medium no-print">
                 <button
                   onClick={() => onEdit(deadline)}
-                  className="text-primary-600 hover:text-primary-900 mr-3"
+                  className="text-green-600 hover:text-green-900 mr-3"
                 >
                   Modifica
                 </button>

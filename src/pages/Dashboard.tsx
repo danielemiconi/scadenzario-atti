@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase/config';
-import { Deadline, DeadlineFilter } from '../types';
+import { type Deadline, type DeadlineFilter } from '../types';
 import { DeadlineList } from '../components/deadlines/DeadlineList';
 import { DeadlineFilters } from '../components/deadlines/DeadlineFilters';
 import { DeadlineForm } from '../components/deadlines/DeadlineForm';
-import { useAuth } from '../contexts/AuthContext';
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale';
-
 export const Dashboard: React.FC = () => {
-  const { user } = useAuth();
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<DeadlineFilter>({});
@@ -118,7 +113,7 @@ export const Dashboard: React.FC = () => {
           </h3>
           <button
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           >
             + Nuovo Atto
           </button>

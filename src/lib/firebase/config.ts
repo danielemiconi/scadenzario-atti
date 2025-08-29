@@ -21,7 +21,7 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase services
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const functions = getFunctions(app, 'europe-west1');
+export const functions = getFunctions(app, 'us-central1');
 export const storage = getStorage(app);
 
 // Enable emulators in development

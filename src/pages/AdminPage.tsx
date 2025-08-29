@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db, functions } from '../lib/firebase/config';
 import { httpsCallable } from 'firebase/functions';
-import { User } from '../types';
+import { type User } from '../types';
 
 export const AdminPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -84,7 +84,7 @@ export const AdminPage: React.FC = () => {
           
           {loading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -133,7 +133,7 @@ export const AdminPage: React.FC = () => {
                         <select
                           value={user.role}
                           onChange={(e) => handleRoleChange(user.uid!, e.target.value as 'admin' | 'standard')}
-                          className="text-sm border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                          className="text-sm border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
                         >
                           <option value="standard">Standard</option>
                           <option value="admin">Admin</option>

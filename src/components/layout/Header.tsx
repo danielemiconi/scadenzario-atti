@@ -28,14 +28,14 @@ export const Header: React.FC = () => {
           <nav className="flex items-center space-x-4">
             <Link
               to="/"
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+              className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium"
             >
               Dashboard
             </Link>
             
             <Link
               to="/legend"
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+              className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium"
             >
               Legenda
             </Link>
@@ -43,7 +43,7 @@ export const Header: React.FC = () => {
             {user?.role === 'admin' && (
               <Link
                 to="/admin"
-                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium"
+                className="text-gray-700 hover:text-green-600 px-3 py-2 rounded-md text-sm font-medium"
               >
                 Admin
               </Link>

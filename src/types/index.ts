@@ -25,46 +25,28 @@ export interface LegendEntry {
   updatedAt: Timestamp;
 }
 
-// Deadline status enum
-export enum DeadlineStatus {
-  DEPOSITATO = 'DEPOSITATO',
-  FATTO = 'FATTO',
-  RINVIATA = 'RINVIATA',
-  NOTIFICATO = 'NOTIFICATO',
-  NOTE_127_TER = 'NOTE_127_TER',
-  NOTE_TRATT_SCRITTA = 'NOTE_TRATT_SCRITTA',
-  MEMORIA_171_TER = 'MEMORIA_171_TER',
-  NOTE_PC = 'NOTE_PC',
-  COMPARSA_COSTITUZIONE = 'COMPARSA_COSTITUZIONE',
-  COMPARSA_CONCLUSIONALE = 'COMPARSA_CONCLUSIONALE',
-  REPLICHE = 'REPLICHE',
-  COMPARSA_APPELLO = 'COMPARSA_APPELLO',
-  RICORSO_CASSAZIONE = 'RICORSO_CASSAZIONE',
-  RECLAMO = 'RECLAMO',
-  MEMORIA_218_DUODECIES = 'MEMORIA_218_DUODECIES',
-  UD_EDITTALE = 'UD_EDITTALE',
-  PENDENTE = 'PENDENTE'
-}
+// Deadline status type
+export const DeadlineStatus = {
+  FARE: 'FARE',
+  NON_FARE: 'NON_FARE',
+  FATTO: 'FATTO',
+  DEPOSITARE: 'DEPOSITARE',
+  NOTIFICARE: 'NOTIFICARE',
+  DEPOSITATO: 'DEPOSITATO',
+  NOTIFICATO: 'NOTIFICATO'
+} as const;
+
+export type DeadlineStatus = (typeof DeadlineStatus)[keyof typeof DeadlineStatus];
 
 // Status display mapping
 export const STATUS_DISPLAY_MAP: Record<DeadlineStatus, string[]> = {
-  [DeadlineStatus.DEPOSITATO]: ['DEPOSITATO', 'DEPOSITATA'],
+  [DeadlineStatus.FARE]: ['FARE', 'DA FARE'],
+  [DeadlineStatus.NON_FARE]: ['NON FARE', 'NON DA FARE'],
   [DeadlineStatus.FATTO]: ['FATTO', 'FATTA'],
-  [DeadlineStatus.RINVIATA]: ['RINVIATA', 'RINVIATO'],
-  [DeadlineStatus.NOTIFICATO]: ['NOTIFICATO', 'NOTIFICATA'],
-  [DeadlineStatus.NOTE_127_TER]: ['NOTE 127 TER', 'NOTE SCRITTE D\'UDIENZA 127 TER'],
-  [DeadlineStatus.NOTE_TRATT_SCRITTA]: ['NOTE TRATT. SCRITTA', 'NOTE DI TRATTAZIONE SCRITTA'],
-  [DeadlineStatus.MEMORIA_171_TER]: ['MEMORIA 171 TER', 'MEMORIA 171 TER n. 1'],
-  [DeadlineStatus.NOTE_PC]: ['NOTE DI P.C.', 'NOTE DI PC'],
-  [DeadlineStatus.COMPARSA_COSTITUZIONE]: ['COMPARSA COSTITUZIONE', 'COMP COST', 'COMPARSA DI COSTITUZIONE'],
-  [DeadlineStatus.COMPARSA_CONCLUSIONALE]: ['COMPARSA CONCLUSIONALE', 'COMP CONCL'],
-  [DeadlineStatus.REPLICHE]: ['REPLICHE', 'REPLICA'],
-  [DeadlineStatus.COMPARSA_APPELLO]: ['COMPARSA APPELLO', 'ATTO DI APPELLO'],
-  [DeadlineStatus.RICORSO_CASSAZIONE]: ['RICORSO PER CASSAZIONE'],
-  [DeadlineStatus.RECLAMO]: ['RECLAMO'],
-  [DeadlineStatus.MEMORIA_218_DUODECIES]: ['MEMORIE EX ART. 218-DUODECIES N. 1 C.P.C.'],
-  [DeadlineStatus.UD_EDITTALE]: ['UD. EDITTALE', 'UDIENZA EDITTALE'],
-  [DeadlineStatus.PENDENTE]: ['PENDENTE', 'IN ATTESA']
+  [DeadlineStatus.DEPOSITARE]: ['DEPOSITARE', 'DA DEPOSITARE'],
+  [DeadlineStatus.NOTIFICARE]: ['NOTIFICARE', 'DA NOTIFICARE'],
+  [DeadlineStatus.DEPOSITATO]: ['DEPOSITATO', 'DEPOSITATA'],
+  [DeadlineStatus.NOTIFICATO]: ['NOTIFICATO', 'NOTIFICATA']
 };
 
 // Deadline interface

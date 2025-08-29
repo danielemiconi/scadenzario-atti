@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { addDoc, updateDoc, doc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase/config';
-import { Deadline, DeadlineStatus, STATUS_DISPLAY_MAP } from '../../types';
+import { type Deadline, DeadlineStatus, STATUS_DISPLAY_MAP } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { format } from 'date-fns';
 
@@ -95,14 +95,15 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
 
   return (
     <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
+        <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
           <h3 className="text-lg font-medium text-gray-900">
             {deadline ? 'Modifica Atto' : 'Nuovo Atto Processuale'}
           </h3>
         </div>
 
-        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="px-6 py-4 space-y-4 overflow-y-auto flex-1">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="ownerInitials" className="block text-sm font-medium text-gray-700">
@@ -117,7 +118,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
                 maxLength={2}
                 required
                 disabled={user?.role === 'standard' && !deadline}
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm uppercase disabled:bg-gray-100"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm uppercase disabled:bg-gray-100"
               />
             </div>
 
@@ -133,7 +134,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
                 onChange={handleChange}
                 required
                 placeholder="123/2025"
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
               />
             </div>
           </div>
@@ -149,7 +150,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
               value={formData.matter}
               onChange={handleChange}
               required
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
             />
           </div>
 
@@ -164,7 +165,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
               value={formData.court}
               onChange={handleChange}
               required
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
             />
           </div>
 
@@ -180,7 +181,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
               onChange={handleChange}
               required
               placeholder="COMPARSA DI COSTITUZIONE"
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
             />
           </div>
 
@@ -196,7 +197,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
                 value={formData.hearingDate}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
               />
             </div>
 
@@ -209,7 +210,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
               >
                 <option value="">Seleziona...</option>
                 {Object.entries(STATUS_DISPLAY_MAP).map(([key, values]) => (
@@ -231,7 +232,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
               name="statusDate"
               value={formData.statusDate}
               onChange={handleChange}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
             />
           </div>
 
@@ -245,28 +246,29 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
               value={formData.notes}
               onChange={handleChange}
               rows={3}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
             />
           </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-800">{error}</div>
-            </div>
-          )}
+            {error && (
+              <div className="rounded-md bg-red-50 p-4">
+                <div className="text-sm text-red-800">{error}</div>
+              </div>
+            )}
+          </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3 flex-shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               Annulla
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
             >
               {isLoading ? 'Salvataggio...' : 'Salva e Chiudi'}
             </button>
