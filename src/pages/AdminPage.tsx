@@ -3,6 +3,7 @@ import { collection, query, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db, functions } from '../lib/firebase/config';
 import { httpsCallable } from 'firebase/functions';
 import { type User } from '../types';
+import { runDataMigration } from '../utils/adminUtils';
 
 export const AdminPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -151,15 +152,25 @@ export const AdminPage: React.FC = () => {
           <h4 className="text-md font-medium text-gray-900 mb-4">Azioni di Sistema</h4>
           
           <div className="space-y-3">
-            <button
-              onClick={exportData}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              Esporta Dati CSV
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={exportData}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              >
+                Esporta Dati CSV
+              </button>
+              
+              <button
+                onClick={runDataMigration}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Migrazione Dati
+              </button>
+            </div>
             
             <div className="text-sm text-gray-600">
               <p>• Export CSV: Esporta tutti gli atti in formato CSV</p>
+              <p>• Migrazione Dati: Aggiungi campi 'deleted' e 'archived' ai documenti esistenti</p>
               <p>• I ruoli utente richiedono il logout/login per essere applicati</p>
               <p>• Le modifiche ai ruoli sono registrate nel log di audit</p>
             </div>

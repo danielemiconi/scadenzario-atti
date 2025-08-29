@@ -7,8 +7,11 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return isAuthenticated() && 
-        request.auth.token.role == 'admin';
+      return isAuthenticated() && (
+        request.auth.token.role == 'admin' ||
+        (request.auth.token.email == 'daniele.miconi@iblegal.it') ||
+        getUserData().role == 'admin'
+      );
     }
     
     function getUserData() {
@@ -29,6 +32,22 @@ service cloud.firestore {
                                   'rg', 'actType', 'hearingDate', 'createdBy']) &&
              data.rg.matches('^[0-9]{1,6}/[0-9]{4}$') &&
              data.monthYear.matches('^[0-9]{4}-[0-9]{2}$');
+    }
+    
+    function hasValidArchiveFields() {
+      let data = request.resource.data;
+      // When archiving, ensure proper archive fields are set
+      return !data.keys().hasAny(['archived']) || 
+             (data.archived == true && data.keys().hasAll(['archivedAt', 'archivedBy'])) ||
+             (data.archived == false);
+    }
+    
+    function hasValidDeleteFields() {
+      let data = request.resource.data;
+      // When soft deleting, ensure proper delete fields are set
+      return !data.keys().hasAny(['deleted']) || 
+             (data.deleted == true && data.keys().hasAll(['deletedAt', 'deletedBy'])) ||
+             (data.deleted == false);
     }
     
     function isNotDuplicate() {
@@ -56,14 +75,17 @@ service cloud.firestore {
     
     // Deadlines collection rules
     match /deadlines/{deadlineId} {
-      allow read: if isAuthenticated() && 
-                     (!resource.data.keys().hasAny(['deleted']) || resource.data.deleted == false);
+      allow read: if isAuthenticated();
       allow create: if isAuthenticated() && 
                        hasValidDeadlineData() &&
+                       hasValidArchiveFields() &&
+                       hasValidDeleteFields() &&
                        request.resource.data.createdBy == request.auth.uid;
       allow update: if (isAdmin() || isOwnerOrAssigned(resource.data)) &&
-                       hasValidDeadlineData();
-      allow delete: if isAdmin(); // Only admin can hard delete, others use soft delete
+                       hasValidDeadlineData() &&
+                       hasValidArchiveFields() &&
+                       hasValidDeleteFields();
+      allow delete: if isAdmin(); // Only admin can hard delete - no additional validation needed
     }
     
     // Audit logs collection (write-only for system, read for admins)

@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase/config';
-import { type User, type AuthContextType } from '../types';
+import { type User, type AuthContextType, type UserRole } from '../types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -33,10 +33,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         try {
+          // Get custom claims (used by Firestore rules)
+          const tokenResult = await firebaseUser.getIdTokenResult();
+          const customClaims = tokenResult.claims;
+          
+          console.log('Firebase Auth custom claims:', customClaims);
+          
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
-            setUser({ ...userData, uid: firebaseUser.uid });
+            // Use role from custom claims if available, fallback to Firestore
+            const roleFromClaims = (customClaims.role as UserRole) || userData.role;
+            setUser({ ...userData, uid: firebaseUser.uid, role: roleFromClaims });
+            
+            console.log('User loaded with role:', roleFromClaims);
           } else {
             // If user document doesn't exist, create a basic one
             const newUser: User = {

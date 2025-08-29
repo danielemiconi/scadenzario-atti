@@ -13,25 +13,33 @@ export const DeadlineFilters: React.FC<DeadlineFiltersProps> = ({
   onFiltersChange,
 }) => {
   const [courts, setCourts] = useState<string[]>([]);
+  const [forums, setForums] = useState<string[]>([]);
   const [initials, setInitials] = useState<string[]>([]);
   const [monthYears, setMonthYears] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
-      const deadlinesSnapshot = await getDocs(query(collection(db, 'deadlines')));
+      const deadlinesQuery = query(collection(db, 'deadlines'));
+      const deadlinesSnapshot = await getDocs(deadlinesQuery);
       
       const uniqueCourts = new Set<string>();
+      const uniqueForums = new Set<string>();
       const uniqueInitials = new Set<string>();
       const uniqueMonthYears = new Set<string>();
       
       deadlinesSnapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.court) uniqueCourts.add(data.court);
-        if (data.ownerInitials) uniqueInitials.add(data.ownerInitials);
-        if (data.monthYear) uniqueMonthYears.add(data.monthYear);
+        // Solo includere documenti non eliminati
+        if (data.deleted !== true) {
+          if (data.court) uniqueCourts.add(data.court);
+          if (data.forum) uniqueForums.add(data.forum);
+          if (data.ownerInitials) uniqueInitials.add(data.ownerInitials);
+          if (data.monthYear) uniqueMonthYears.add(data.monthYear);
+        }
       });
       
       setCourts(Array.from(uniqueCourts).sort());
+      setForums(Array.from(uniqueForums).sort());
       setInitials(Array.from(uniqueInitials).sort());
       setMonthYears(Array.from(uniqueMonthYears).sort());
     };
@@ -68,7 +76,7 @@ export const DeadlineFilters: React.FC<DeadlineFiltersProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <div>
           <label htmlFor="monthYear" className="block text-sm font-medium text-gray-700">
             Mese/Anno
@@ -127,6 +135,25 @@ export const DeadlineFilters: React.FC<DeadlineFiltersProps> = ({
         </div>
 
         <div>
+          <label htmlFor="forum" className="block text-sm font-medium text-gray-700">
+            Foro
+          </label>
+          <select
+            id="forum"
+            value={filters.forum || ''}
+            onChange={(e) => handleFilterChange('forum', e.target.value)}
+            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
+          >
+            <option value="">Tutti</option>
+            {forums.map((forum) => (
+              <option key={forum} value={forum}>
+                {forum}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
           <label htmlFor="status" className="block text-sm font-medium text-gray-700">
             Stato
           </label>
@@ -154,7 +181,7 @@ export const DeadlineFilters: React.FC<DeadlineFiltersProps> = ({
             id="search"
             value={filters.searchText || ''}
             onChange={(e) => handleFilterChange('searchText', e.target.value)}
-            placeholder="RG, pratica, note..."
+            placeholder="RG, pratica, foro, note..."
             className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md"
           />
         </div>

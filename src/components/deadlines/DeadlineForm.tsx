@@ -27,11 +27,88 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
     statusDate: deadline?.statusDate ? format(deadline.statusDate.toDate(), 'yyyy-MM-dd') : '',
     notes: deadline?.notes || '',
   });
+  
+  const predefinedActTypes = [
+    'ATTO DI APPELLO',
+    'ATTO DI CITAZIONE',
+    'ATTO DI CITAZIONE IN OPPOSIZIONE ATTI ESECUTIVI',
+    'ATTO DI CITAZIONE IN OPPOSIZIONE ALL\'ESECUZIONE',
+    'ATTO DI PRECETTO',
+    'COMPARSA A SEGUITO DI RIASSUNZIONE',
+    'COMPARSA DI COSTITUZIONE E RISPOSTA',
+    'COMPARSA DI COSTITUZIONE E RISPOSTA IN APPELLO',
+    'FOGLIO DI PRECISAZIONE DELLE CONCLUSIONI',
+    'ISTANZA',
+    'MEMORIA',
+    'MEMORIA 171-TER 1° TERMINE',
+    'MEMORIA 171-TER 2° TERMINE',
+    'MEMORIA 171-TER 3° TERMINE',
+    'MEMORIA 189 1° TERMINE (P.C.)',
+    'MEMORIA 189 2° TERMINE (CONCLUSIONALE)',
+    'MEMORIA 189 3° TERMINE C.P.C. (REPLICHE)',
+    'MEMORIA 281-DUODECIES 1° TERMINE',
+    'MEMORIA 281-DUODECIES 2° TERMINE',
+    'NOTA DI DEPOSITO',
+    'NOTE SCRITTE D\'UDIENZA 127-TER',
+    'OPPOSIZIONE A DECRETO INGIUNTIVO',
+    'OPPOSIZIONE A DECRETO INGIUNTIVO TARDIVA EX ART. 650 C.P.C.',
+    'RICORSO IN CASSAZIONE',
+    'RICORSO IN OPPOSIZIONE ATTI ESECUTIVI',
+    'RICORSO IN OPPOSIZIONE ALL\'ESECUZIONE',
+    'RICORSO PER CASSAZIONE',
+    'RICORSO PER DECRETO INGIUNTIVO',
+    'RICORSO SEMPLIFICATO COGNZIONE'
+  ];
+
+  const [isCustomActType, setIsCustomActType] = useState(() => {
+    // Check if the existing actType is in the predefined options
+    if (deadline?.actType) {
+      return !predefinedActTypes.includes(deadline.actType);
+    }
+    return false;
+  });
+  
+  const [customActType, setCustomActType] = useState(() => {
+    if (deadline?.actType) {
+      return !predefinedActTypes.includes(deadline.actType) ? deadline.actType : '';
+    }
+    return '';
+  });
+
+  const actTypeOptions = predefinedActTypes;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    
+    if (name === 'actType') {
+      if (value === 'ALTRO') {
+        setIsCustomActType(true);
+        setFormData({
+          ...formData,
+          actType: '',
+        });
+      } else {
+        setIsCustomActType(false);
+        setCustomActType('');
+        setFormData({
+          ...formData,
+          actType: value,
+        });
+      }
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
+  };
+
+  const handleCustomActTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCustomActType(value);
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      actType: value,
     });
   };
 
@@ -200,16 +277,35 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
             <label htmlFor="actType" className="block text-sm font-medium text-gray-700">
               Tipo Atto*
             </label>
-            <input
-              type="text"
+            <select
               id="actType"
               name="actType"
-              value={formData.actType}
+              value={isCustomActType ? 'ALTRO' : formData.actType}
               onChange={handleChange}
               required
-              placeholder="COMPARSA DI COSTITUZIONE"
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-            />
+            >
+              <option value="">Seleziona...</option>
+              <option value="ALTRO">ALTRO</option>
+              {actTypeOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            
+            {isCustomActType && (
+              <input
+                type="text"
+                id="customActType"
+                name="customActType"
+                value={customActType}
+                onChange={handleCustomActTypeChange}
+                required
+                placeholder="Inserisci tipo atto personalizzato"
+                className="mt-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+              />
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

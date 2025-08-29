@@ -6,6 +6,12 @@ import { checkDuplicates } from './deadlines/checkDuplicates';
 import { sendReminders } from './notifications/sendReminders';
 import { generateIcs } from './deadlines/generateIcs';
 import { exportData } from './deadlines/exportData';
+import { archiveDeadline } from './deadlines/archiveDeadline';
+import { softDeleteDeadline } from './deadlines/softDeleteDeadline';
+import { restoreDeadline } from './deadlines/restoreDeadline';
+import { emptyTrash } from './deadlines/emptyTrash';
+import { permanentlyDelete } from './deadlines/permanentlyDelete';
+import { runMigration } from './migrations/addMissingFields';
 import { auditLogger } from './utils/auditLogger';
 
 // Initialize Firebase Admin
@@ -32,6 +38,18 @@ exports.sendReminders = functions.pubsub
 // Export Functions
 exports.generateIcs = functions.https.onCall(generateIcs);
 exports.exportData = functions.https.onCall(exportData);
+
+// Archive Functions
+exports.archiveDeadline = functions.https.onCall(archiveDeadline);
+
+// Trash/Delete Functions
+exports.softDeleteDeadline = functions.https.onCall(softDeleteDeadline);
+exports.restoreDeadline = functions.https.onCall(restoreDeadline);
+exports.emptyTrash = functions.https.onCall(emptyTrash);
+exports.permanentlyDelete = functions.https.onCall(permanentlyDelete);
+
+// Migration Functions
+exports.runMigration = functions.https.onCall(runMigration);
 
 // Audit Functions
 exports.auditLogger = functions.firestore

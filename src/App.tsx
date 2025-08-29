@@ -8,6 +8,7 @@ import { Layout } from './components/layout/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { LegendPage } from './pages/LegendPage';
 import { AdminPage } from './pages/AdminPage';
+import { TrashPage } from './pages/TrashPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +56,17 @@ function App() {
                 <PrivateRoute requireAdmin>
                   <Layout>
                     <AdminPage />
+                  </Layout>
+                </PrivateRoute>
+              }
+            />
+            
+            <Route
+              path="/trash"
+              element={
+                <PrivateRoute requireAdmin>
+                  <Layout>
+                    <TrashPage />
                   </Layout>
                 </PrivateRoute>
               }

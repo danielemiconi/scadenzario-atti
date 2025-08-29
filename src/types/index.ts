@@ -20,6 +20,8 @@ export interface LegendEntry {
   initials: string;
   fullName: string;
   active: boolean;
+  backgroundColor?: string; // Colore di sfondo personalizzato
+  textColor?: string; // Colore del testo personalizzato
   createdBy: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -56,14 +58,19 @@ export interface Deadline {
   ownerInitials: string;
   matter: string; // Pratica
   court: string; // Ufficio
-  rg: string; // RG number
+  forum?: string; // Foro (luogo dell'ufficio giudiziario)
+  rg: string; // Ruolo Generale
   actType: string; // Tipo atto
-  hearingDate: Timestamp; // Data udienza
+  hearingDate: Timestamp; // Data scadenza
   status?: DeadlineStatus;
-  statusDate?: Timestamp;
+  statusDate?: Timestamp; // Data udienza
   notes?: string;
   archived: boolean;
+  archivedAt?: Timestamp;
+  archivedBy?: string;
   deleted: boolean;
+  deletedAt?: Timestamp;
+  deletedBy?: string;
   createdBy: string;
   updatedBy?: string;
   createdAt: Timestamp;
@@ -104,6 +111,7 @@ export interface DeadlineFilter {
   monthYear?: string;
   ownerInitials?: string;
   court?: string;
+  forum?: string;
   status?: DeadlineStatus;
   searchText?: string;
   archived?: boolean;

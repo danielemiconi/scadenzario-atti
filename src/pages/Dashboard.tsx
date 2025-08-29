@@ -17,8 +17,6 @@ export const Dashboard: React.FC = () => {
     
     let q = query(
       collection(db, 'deadlines'),
-      where('deleted', '==', false),
-      where('archived', '==', filters.archived || false),
       orderBy('hearingDate', 'asc')
     );
 
@@ -34,6 +32,10 @@ export const Dashboard: React.FC = () => {
       q = query(q, where('court', '==', filters.court));
     }
     
+    if (filters.forum) {
+      q = query(q, where('forum', '==', filters.forum));
+    }
+    
     if (filters.status) {
       q = query(q, where('status', '==', filters.status));
     }
@@ -41,18 +43,31 @@ export const Dashboard: React.FC = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const deadlineData: Deadline[] = [];
       snapshot.forEach((doc) => {
-        deadlineData.push({ id: doc.id, ...doc.data() } as Deadline);
+        const data = doc.data() as Deadline;
+        // Set default values for fields that might not exist in older documents
+        deadlineData.push({ 
+          id: doc.id, 
+          ...data,
+          deleted: data.deleted ?? false,
+          archived: data.archived ?? false
+        });
       });
       
+      // Filter out deleted items and apply archived filter
+      let filteredData = deadlineData.filter(d => 
+        d.deleted !== true && 
+        d.archived === (filters.archived || false)
+      );
+      
       // Apply text search filter if present
-      let filteredData = deadlineData;
       if (filters.searchText) {
         const searchLower = filters.searchText.toLowerCase();
-        filteredData = deadlineData.filter(
+        filteredData = filteredData.filter(
           (d) =>
             d.rg.toLowerCase().includes(searchLower) ||
             d.matter.toLowerCase().includes(searchLower) ||
             d.court.toLowerCase().includes(searchLower) ||
+            d.forum?.toLowerCase().includes(searchLower) ||
             d.actType.toLowerCase().includes(searchLower) ||
             d.notes?.toLowerCase().includes(searchLower)
         );
@@ -107,10 +122,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center no-print">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Atti con Scadenza
-          </h3>
+        <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-end items-center no-print">
           <button
             onClick={() => setShowForm(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"

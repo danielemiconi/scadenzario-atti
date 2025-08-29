@@ -48,3 +48,12 @@ out/
 *.tmp
 *.temp
 .cache/
+
+# Project specific
+prompt.md
+elencoatti.md
+users.json
+set-admin.cjs
+stati.md
+ARCHIVIO_README.md
+*.pdf

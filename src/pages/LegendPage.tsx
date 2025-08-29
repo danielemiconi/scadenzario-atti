@@ -14,6 +14,8 @@ export const LegendPage: React.FC = () => {
   const [formData, setFormData] = useState({
     initials: '',
     fullName: '',
+    backgroundColor: '#f3f4f6',
+    textColor: '#1f2937',
   });
 
   const isAdmin = user?.role === 'admin';
@@ -45,6 +47,8 @@ export const LegendPage: React.FC = () => {
     setFormData({
       initials: entry.initials,
       fullName: entry.fullName,
+      backgroundColor: entry.backgroundColor || '#f3f4f6',
+      textColor: entry.textColor || '#1f2937',
     });
     setShowForm(true);
   };
@@ -72,12 +76,16 @@ export const LegendPage: React.FC = () => {
         await updateDoc(doc(db, 'legend', editingEntry.id!), {
           initials: formData.initials.toUpperCase(),
           fullName: formData.fullName,
+          backgroundColor: formData.backgroundColor,
+          textColor: formData.textColor,
           updatedAt: serverTimestamp(),
         });
       } else {
         await addDoc(collection(db, 'legend'), {
           initials: formData.initials.toUpperCase(),
           fullName: formData.fullName,
+          backgroundColor: formData.backgroundColor,
+          textColor: formData.textColor,
           active: true,
           createdBy: user?.uid,
           createdAt: serverTimestamp(),
@@ -87,7 +95,7 @@ export const LegendPage: React.FC = () => {
       
       setShowForm(false);
       setEditingEntry(null);
-      setFormData({ initials: '', fullName: '' });
+      setFormData({ initials: '', fullName: '', backgroundColor: '#f3f4f6', textColor: '#1f2937' });
     } catch (error) {
       console.error('Error saving legend entry:', error);
       alert('Errore durante il salvataggio');
@@ -137,6 +145,9 @@ export const LegendPage: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Nome Completo
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Anteprima Colori
+                  </th>
                   {isAdmin && (
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Azioni
@@ -152,6 +163,17 @@ export const LegendPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {entry.fullName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div 
+                        className="inline-flex items-center justify-center w-12 h-8 text-xs font-bold rounded"
+                        style={{
+                          backgroundColor: entry.backgroundColor || '#f3f4f6',
+                          color: entry.textColor || '#1f2937'
+                        }}
+                      >
+                        {entry.initials}
+                      </div>
                     </td>
                     {isAdmin && (
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -222,13 +244,56 @@ export const LegendPage: React.FC = () => {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="backgroundColor" className="block text-sm font-medium text-gray-700">
+                    Colore Sfondo
+                  </label>
+                  <input
+                    type="color"
+                    id="backgroundColor"
+                    value={formData.backgroundColor}
+                    onChange={(e) => setFormData({ ...formData, backgroundColor: e.target.value })}
+                    className="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="textColor" className="block text-sm font-medium text-gray-700">
+                    Colore Testo
+                  </label>
+                  <input
+                    type="color"
+                    id="textColor"
+                    value={formData.textColor}
+                    onChange={(e) => setFormData({ ...formData, textColor: e.target.value })}
+                    className="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Anteprima
+                </label>
+                <div 
+                  className="inline-flex items-center justify-center w-16 h-10 text-sm font-bold rounded border"
+                  style={{
+                    backgroundColor: formData.backgroundColor,
+                    color: formData.textColor
+                  }}
+                >
+                  {formData.initials.toUpperCase() || 'XX'}
+                </div>
+              </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setShowForm(false);
                     setEditingEntry(null);
-                    setFormData({ initials: '', fullName: '' });
+                    setFormData({ initials: '', fullName: '', backgroundColor: '#f3f4f6', textColor: '#1f2937' });
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 >
