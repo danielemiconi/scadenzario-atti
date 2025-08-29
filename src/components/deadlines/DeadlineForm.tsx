@@ -16,9 +16,10 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
   const [error, setError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
-    ownerInitials: deadline?.ownerInitials || user?.initials || '',
+    ownerInitials: deadline?.ownerInitials || '',
     matter: deadline?.matter || '',
     court: deadline?.court || '',
+    forum: deadline?.forum || '',
     rg: deadline?.rg || '',
     actType: deadline?.actType || '',
     hearingDate: deadline ? format(deadline.hearingDate.toDate(), 'yyyy-MM-dd') : '',
@@ -58,7 +59,8 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
         monthYear,
         ownerInitials: formData.ownerInitials.toUpperCase(),
         matter: formData.matter,
-        court: formData.court.toUpperCase(),
+        court: formData.court,
+        forum: formData.forum,
         rg: formData.rg,
         actType: formData.actType.toUpperCase(),
         hearingDate: Timestamp.fromDate(hearingDate),
@@ -124,7 +126,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
 
             <div>
               <label htmlFor="rg" className="block text-sm font-medium text-gray-700">
-                RG* (es. 506/2025)
+                Ruolo Generale
               </label>
               <input
                 type="text"
@@ -154,19 +156,44 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
             />
           </div>
 
-          <div>
-            <label htmlFor="court" className="block text-sm font-medium text-gray-700">
-              Ufficio*
-            </label>
-            <input
-              type="text"
-              id="court"
-              name="court"
-              value={formData.court}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="court" className="block text-sm font-medium text-gray-700">
+                Ufficio*
+              </label>
+              <select
+                id="court"
+                name="court"
+                value={formData.court}
+                onChange={handleChange}
+                required
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+              >
+                <option value="">Seleziona...</option>
+                <option value="GIUDICE DI PACE">GIUDICE DI PACE</option>
+                <option value="TRIBUNALE">TRIBUNALE</option>
+                <option value="CORTE DI APPELLO">CORTE DI APPELLO</option>
+                <option value="CORTE DI CASSAZIONE">CORTE DI CASSAZIONE</option>
+                <option value="T.A.R.">T.A.R.</option>
+                <option value="CONSIGLIO DI STATO">CONSIGLIO DI STATO</option>
+                <option value="CORTE GIUSTIZIA TRIBUTARIA DI I° GRADO">CORTE GIUSTIZIA TRIBUTARIA DI I° GRADO</option>
+                <option value="CORTE GIUSTIZIA TRIBUTARIA DI II° GRADO">CORTE DI GIUSTIZIA TRIBUTARIA DI II° GRADO</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="forum" className="block text-sm font-medium text-gray-700">
+                Foro
+              </label>
+              <input
+                type="text"
+                id="forum"
+                name="forum"
+                value={formData.forum}
+                onChange={handleChange}
+                placeholder="es. Roma, Milano, Napoli"
+                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+              />
+            </div>
           </div>
 
           <div>
@@ -188,7 +215,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="hearingDate" className="block text-sm font-medium text-gray-700">
-                Data Udienza*
+                Data Scadenza*
               </label>
               <input
                 type="date"
@@ -224,7 +251,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
 
           <div>
             <label htmlFor="statusDate" className="block text-sm font-medium text-gray-700">
-              Data Stato
+              Data Udienza
             </label>
             <input
               type="date"
