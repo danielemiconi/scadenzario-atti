@@ -10,10 +10,11 @@ Scadenzario Atti Processuali is a legal deadline management system built with Re
 
 ### Development
 - `npm run dev` - Start Vite dev server for React app
-- `npm run build` - Build React app for production
+- `npm run build` - Build React app for production (includes TypeScript compilation)
 - `npm run lint` - Run ESLint on TypeScript/React files
 - `npm run typecheck` - Type check without emitting files
 - `npm run format` - Format code with Prettier
+- `npm run firebase:emulators` - Start Firebase emulators for local development
 
 ### Firebase Functions
 - `cd functions && npm run build` - Build TypeScript functions
@@ -21,15 +22,16 @@ Scadenzario Atti Processuali is a legal deadline management system built with Re
 - `cd functions && npm run lint` - Lint functions code
 
 ### Firebase Deployment
+- `npm run firebase:deploy` - Build React app and deploy everything
+- `npm run firebase:deploy:hosting` - Build and deploy only hosting
+- `npm run firebase:deploy:functions` - Deploy only Cloud Functions
+- `npm run firebase:deploy:rules` - Deploy only Firestore security rules
 - `firebase deploy` - Deploy everything (hosting, functions, rules)
-- `firebase deploy --only functions` - Deploy only Cloud Functions
-- `firebase deploy --only hosting` - Deploy only hosting after build
-- `firebase deploy --only firestore:rules` - Deploy Firestore security rules
 - `firebase emulators:start` - Start local Firebase emulators
 
 ### Monitoring
-- `firebase functions:log` - View Cloud Functions logs
-- `cd functions && npm run logs` - Alternative way to view logs
+- `npm run functions:logs` - View Cloud Functions logs
+- `firebase functions:log` - Alternative way to view logs
 
 ## Architecture
 
@@ -55,15 +57,21 @@ Located in `functions/src/`:
   - `checkDuplicates.ts` - Prevent duplicate deadline entries
   - `exportData.ts` - Export deadlines to CSV
   - `generateIcs.ts` - Generate calendar files
+  - `archiveDeadline.ts` - Archive/restore deadlines
+  - `softDeleteDeadline.ts` - Soft delete deadlines (move to trash)
+  - `restoreDeadline.ts` - Restore deadlines from trash
+  - `emptyTrash.ts` - Permanently delete all trashed items
+  - `permanentlyDelete.ts` - Hard delete specific deadline
 - **Notifications**: `sendReminders.ts` - Daily scheduled email reminders
 - **Audit**: `auditLogger.ts` - Track all Firestore document changes
+- **Migrations**: `addMissingFields.ts` - Data migration utilities
 
 ### Data Model (Firestore)
 - **users**: User profiles with roles and initials
-- **deadlines**: Court deadlines with status tracking
-- **legend**: Mapping of initials to full names
-- **audit_logs**: Change history for compliance
-- **notifications**: Email notification records
+- **deadlines**: Court deadlines with status tracking, archival, and soft deletion
+- **legend**: Mapping of initials to full names with custom colors
+- **auditLogs**: Change history for compliance (read-only from client)
+- **notifications**: Email notification records (read-only from client)
 
 ### Security
 - Firestore rules in `firestore.rules` enforce role-based access
@@ -73,24 +81,55 @@ Located in `functions/src/`:
 
 ## Development Guidelines
 
+### Role-Based Access Control
+The system implements strict RBAC with two roles:
+- **admin**: Full access to user management, data import/export, trash management
+- **standard**: Can manage deadlines they created or are assigned to (via initials)
+
+Role assignment happens via:
+1. Firebase custom claims (set via `setUserRole` Cloud Function)
+2. Firestore document role field (fallback)
+3. Special email admin bypass: `daniele.miconi@iblegal.it`
+
+### Critical Business Logic
+- **Duplicate Prevention**: `checkDuplicates` function validates court+rg+actType+hearingDate uniqueness
+- **Auto-calculated Fields**: `monthYear` automatically derived from `hearingDate` via `calculateMonthYear`
+- **Audit Trail**: All CRUD operations logged via `auditLogger` trigger function
+- **Soft Deletion**: Items moved to trash (deleted=true) before permanent deletion
+
+### Data Validation Patterns
+- **RG Format**: Must match `^[0-9]{1,6}/[0-9]{4}$` (e.g., "506/2025")
+- **MonthYear Format**: Must match `^[0-9]{4}-[0-9]{2}$` (e.g., "2025-06")
+- **Required Fields**: All deadlines must have `monthYear`, `ownerInitials`, `matter`, `court`, `rg`, `actType`, `hearingDate`, `createdBy`
+
+### UI/UX Patterns
+- **Deadline Highlighting**: Color-coded based on urgency (red <7 days, yellow 7-14 days, green >14 days)
+- **Icon-Based Actions**: Edit button uses SVG pencil icon instead of text
+- **Visual Deadline Priority**: Scadenza column positioned as last data column for prominence
+
 ### Adding New Features
 1. TypeScript types go in `src/types/index.ts`
 2. Follow existing component patterns in `src/components/`
-3. Use TanStack Query for data fetching
-4. Add corresponding Cloud Function if server-side logic needed
+3. Use TanStack Query for server state management
+4. Add Cloud Function if server-side validation/logic needed
+5. Update Firestore rules for new collections/fields
+6. Consider audit logging requirements
 
 ### Firebase Development
-1. Use emulators for local development: `firebase emulators:start`
-2. Functions use TypeScript - build before deploying: `cd functions && npm run build`
+1. Use emulators for local development: `npm run firebase:emulators`
+2. Functions use TypeScript - always build before deploying
 3. Test functions locally with: `cd functions && npm run serve`
+4. Email configuration stored in Firebase functions config (legacy, migration needed)
 
 ### Deployment Process
-1. Build frontend: `npm run build`
-2. Build functions: `cd functions && npm run build`
-3. Deploy all: `firebase deploy`
-4. Or deploy selectively with `--only` flag
+1. Use `npm run firebase:deploy` for complete build and deploy
+2. Or selective deployment with `npm run firebase:deploy:hosting/functions/rules`
+3. Functions deployment skipped if no changes detected
+4. Build validation includes TypeScript compilation for both React and Functions
 
-### Environment Setup
-- Firebase project configuration required (see README_SETUP.md)
-- Email configuration needed for notifications (Firebase config vars)
-- First admin must be manually set via Firestore console or CLI
+### Setup Requirements
+- Node.js 18+ (note: runtime deprecated, upgrade recommended)
+- Firebase CLI with billing enabled
+- Email configuration for notifications via functions config
+- First admin user manually configured via Firestore console
+- See README_SETUP.md for detailed environment setup
