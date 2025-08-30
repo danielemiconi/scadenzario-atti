@@ -5,16 +5,130 @@ body {
   background-color: #f9fafb;
 }
 
+/* Nasconde l'header di stampa nella visualizzazione normale */
+.print-only {
+  display: none;
+}
+
 @media print {
   @page {
     margin: 1cm;
+    size: A4 landscape;
   }
   
   body {
     background-color: white;
+    color: black;
+    font-size: 12px;
+    line-height: 1.2;
   }
   
   .no-print {
     display: none !important;
+  }
+  
+  /* Intestazione stampa */
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #333;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  .print-header h1 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .print-header p {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  /* Ottimizzazione tabella */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 4px 6px;
+    text-align: left;
+    word-break: break-word;
+  }
+  
+  th {
+    background-color: #f5f5f5 !important;
+    font-weight: bold;
+    font-size: 9px;
+  }
+  
+  /* Titoli dei mesi */
+  .month-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 20px 0 10px 0;
+    page-break-before: avoid;
+    page-break-after: avoid;
+  }
+  
+  /* Mantieni i colori delle scadenze */
+  .bg-red-100 {
+    background-color: #fee2e2 !important;
+    color: #991b1b !important;
+  }
+  
+  .bg-yellow-100 {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+  }
+  
+  .bg-green-100 {
+    background-color: #dcfce7 !important;
+    color: #166534 !important;
+  }
+  
+  .bg-red-200 {
+    background-color: #fecaca !important;
+    color: #991b1b !important;
+  }
+  
+  /* Badge degli stati */
+  .bg-red-100.text-red-800,
+  .bg-blue-100.text-blue-800,
+  .bg-yellow-100.text-yellow-800,
+  .bg-orange-100.text-orange-800,
+  .bg-green-100.text-green-800,
+  .bg-purple-100.text-purple-800,
+  .bg-gray-100.text-gray-800 {
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 8px;
+    font-weight: bold;
+  }
+  
+  /* Colori delle iniziali */
+  .bg-white {
+    background-color: #f9f9f9 !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  /* Evita interruzioni di pagina all'interno delle righe */
+  tr {
+    page-break-inside: avoid;
+  }
+  
+  /* Spazio tra i mesi */
+  .month-section {
+    page-break-before: avoid;
+    margin-bottom: 30px;
   }
 }

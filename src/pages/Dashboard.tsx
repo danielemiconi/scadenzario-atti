@@ -5,6 +5,8 @@ import { type Deadline, type DeadlineFilter } from '../types';
 import { DeadlineList } from '../components/deadlines/DeadlineList';
 import { DeadlineFilters } from '../components/deadlines/DeadlineFilters';
 import { DeadlineForm } from '../components/deadlines/DeadlineForm';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
 export const Dashboard: React.FC = () => {
   const [deadlines, setDeadlines] = useState<Deadline[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,6 +92,22 @@ export const Dashboard: React.FC = () => {
     setEditingDeadline(null);
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const getAppliedFilters = () => {
+    const appliedFilters: string[] = [];
+    if (filters.monthYear) appliedFilters.push(`Mese: ${filters.monthYear}`);
+    if (filters.ownerInitials) appliedFilters.push(`Iniziali: ${filters.ownerInitials}`);
+    if (filters.court) appliedFilters.push(`Ufficio: ${filters.court}`);
+    if (filters.forum) appliedFilters.push(`Foro: ${filters.forum}`);
+    if (filters.status) appliedFilters.push(`Stato: ${filters.status}`);
+    if (filters.searchText) appliedFilters.push(`Ricerca: "${filters.searchText}"`);
+    if (filters.archived) appliedFilters.push('Solo archiviati');
+    return appliedFilters;
+  };
+
   // Group deadlines by month
   const groupedDeadlines = deadlines.reduce((acc, deadline) => {
     const monthKey = deadline.monthYear;
@@ -117,12 +135,30 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header per la stampa */}
+      <div className="print-only print-header">
+        <h1>Scadenzario Atti Processuali</h1>
+        <p>Stampato il {format(new Date(), 'dd MMMM yyyy', { locale: it })} alle {format(new Date(), 'HH:mm')}</p>
+        {getAppliedFilters().length > 0 && (
+          <p><strong>Filtri applicati:</strong> {getAppliedFilters().join(' • ')}</p>
+        )}
+      </div>
+
       <div className="bg-white shadow rounded-lg p-6 no-print">
         <DeadlineFilters filters={filters} onFiltersChange={setFilters} />
       </div>
 
       <div className="bg-white shadow rounded-lg">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-end items-center no-print">
+        <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-end items-center space-x-3 no-print">
+          <button
+            onClick={handlePrint}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Stampa
+          </button>
           <button
             onClick={() => setShowForm(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
@@ -144,8 +180,8 @@ export const Dashboard: React.FC = () => {
                 const monthName = monthNames[month] || month;
                 
                 return (
-                  <div key={monthYear} className="px-4 py-5 sm:px-6">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                  <div key={monthYear} className="px-4 py-5 sm:px-6 month-section">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4 month-title">
                       {monthName} {year}
                     </h4>
                     <DeadlineList
