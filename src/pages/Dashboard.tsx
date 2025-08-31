@@ -13,6 +13,7 @@ export const Dashboard: React.FC = () => {
   const [filters, setFilters] = useState<DeadlineFilter>({});
   const [showForm, setShowForm] = useState(false);
   const [editingDeadline, setEditingDeadline] = useState<Deadline | null>(null);
+  const [cloningDeadline, setCloningDeadline] = useState<Deadline | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -84,12 +85,35 @@ export const Dashboard: React.FC = () => {
 
   const handleEdit = (deadline: Deadline) => {
     setEditingDeadline(deadline);
+    setCloningDeadline(null);
+    setShowForm(true);
+  };
+
+  const handleClone = (deadline: Deadline) => {
+    // Prepara i dati per la clonazione
+    const clonedDeadline: Deadline = {
+      ...deadline,
+      // Resetta i campi specifici come richiesto
+      statusDate: undefined,
+      archived: false,
+      archivedAt: undefined,
+      archivedBy: undefined,
+      deleted: false,
+      deletedAt: undefined,
+      deletedBy: undefined,
+      // Rimuove l'ID per creare una nuova deadline
+      id: undefined
+    };
+    
+    setCloningDeadline(clonedDeadline);
+    setEditingDeadline(null);
     setShowForm(true);
   };
 
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingDeadline(null);
+    setCloningDeadline(null);
   };
 
   const handlePrint = () => {
@@ -187,6 +211,7 @@ export const Dashboard: React.FC = () => {
                     <DeadlineList
                       deadlines={groupedDeadlines[monthYear]}
                       onEdit={handleEdit}
+                      onClone={handleClone}
                     />
                   </div>
                 );
@@ -203,7 +228,8 @@ export const Dashboard: React.FC = () => {
 
       {showForm && (
         <DeadlineForm
-          deadline={editingDeadline}
+          deadline={editingDeadline || cloningDeadline}
+          isCloning={!!cloningDeadline}
           onClose={handleCloseForm}
         />
       )}

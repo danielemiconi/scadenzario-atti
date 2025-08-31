@@ -7,10 +7,11 @@ import { format } from 'date-fns';
 
 interface DeadlineFormProps {
   deadline: Deadline | null;
+  isCloning?: boolean;
   onClose: () => void;
 }
 
-export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose }) => {
+export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning = false, onClose }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +25,8 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
     actType: deadline?.actType || '',
     hearingDate: deadline ? format(deadline.hearingDate.toDate(), 'yyyy-MM-dd') : '',
     status: deadline?.status || '',
-    statusDate: deadline?.statusDate ? format(deadline.statusDate.toDate(), 'yyyy-MM-dd') : '',
+    // Se stiamo clonando, non pre-compilare statusDate (è stato resettato)
+    statusDate: (isCloning || !deadline?.statusDate) ? '' : format(deadline.statusDate.toDate(), 'yyyy-MM-dd'),
     notes: deadline?.notes || '',
   });
   
@@ -149,14 +151,14 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
         updatedAt: serverTimestamp(),
       };
 
-      if (deadline) {
+      if (deadline && !isCloning) {
         // Update existing deadline
         await updateDoc(doc(db, 'deadlines', deadline.id!), {
           ...deadlineData,
           updatedBy: user?.uid,
         });
       } else {
-        // Create new deadline
+        // Create new deadline (anche nel caso di clonazione)
         await addDoc(collection(db, 'deadlines'), {
           ...deadlineData,
           createdBy: user?.uid,
@@ -177,7 +179,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] flex flex-col">
         <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
           <h3 className="text-lg font-medium text-gray-900">
-            {deadline ? 'Modifica Atto' : 'Nuovo Atto Processuale'}
+            {isCloning ? 'Clona Atto' : deadline ? 'Modifica Atto' : 'Nuovo Atto Processuale'}
           </h3>
         </div>
 
@@ -393,7 +395,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, onClose })
               disabled={isLoading}
               className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
             >
-              {isLoading ? 'Salvataggio...' : 'Salva e Chiudi'}
+              {isLoading ? 'Salvataggio...' : isCloning ? 'Clona e Chiudi' : 'Salva e Chiudi'}
             </button>
           </div>
         </form>
