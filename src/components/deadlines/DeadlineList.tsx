@@ -151,10 +151,10 @@ export const DeadlineList: React.FC<DeadlineListProps> = ({ deadlines, onEdit, o
               Data Udienza
             </th>
             <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Data Scadenza
+              Note
             </th>
             <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Note
+              Data Scadenza
             </th>
             <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">
               Azioni
@@ -200,13 +200,13 @@ export const DeadlineList: React.FC<DeadlineListProps> = ({ deadlines, onEdit, o
               <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
                 {deadline.hearingDate ? format(deadline.hearingDate.toDate(), 'dd.MM.yy') : '-'}
               </td>
+              <td className="px-3 py-4 text-sm text-gray-900">
+                {deadline.notes}
+              </td>
               <td className="px-3 py-4 whitespace-nowrap text-sm font-bold">
                 <div className={`px-2 py-1 rounded text-center ${getDeadlineHighlight(deadline.statusDate ? deadline.statusDate.toDate() : new Date())}`}>
                   {deadline.statusDate ? format(deadline.statusDate.toDate(), 'dd.MM.yy') : '-'}
                 </div>
-              </td>
-              <td className="px-3 py-4 text-sm text-gray-900">
-                {deadline.notes}
               </td>
               <td className="px-3 py-4 whitespace-nowrap text-sm font-medium no-print">
                 <div className="inline-flex items-center space-x-2">
