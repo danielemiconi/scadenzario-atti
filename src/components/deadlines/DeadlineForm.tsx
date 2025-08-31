@@ -196,7 +196,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
                 name="ownerInitials"
                 value={formData.ownerInitials}
                 onChange={handleChange}
-                maxLength={2}
+                maxLength={3}
                 required
                 disabled={user?.role === 'standard' && !deadline}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm uppercase disabled:bg-gray-100"

@@ -37,8 +37,8 @@ export const RegisterForm: React.FC = () => {
       return;
     }
 
-    if (formData.initials.length !== 2) {
-      setError('Le iniziali devono essere di 2 caratteri');
+    if (formData.initials.length < 2 || formData.initials.length > 3) {
+      setError('Le iniziali devono essere di 2 o 3 caratteri');
       return;
     }
 
@@ -86,16 +86,16 @@ export const RegisterForm: React.FC = () => {
 
             <div>
               <label htmlFor="initials" className="block text-sm font-medium text-gray-700">
-                Iniziali (2 caratteri)
+                Iniziali (2-3 caratteri)
               </label>
               <input
                 id="initials"
                 name="initials"
                 type="text"
-                maxLength={2}
+                maxLength={3}
                 required
                 className="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-green-500 focus:border-green-500 focus:z-10 sm:text-sm uppercase"
-                placeholder="MR"
+                placeholder="MR o DM"
                 value={formData.initials}
                 onChange={handleChange}
               />

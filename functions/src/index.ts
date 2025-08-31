@@ -6,6 +6,7 @@ import { checkDuplicates } from './deadlines/checkDuplicates';
 import { sendReminders } from './notifications/sendReminders';
 import { generateIcs } from './deadlines/generateIcs';
 import { exportData } from './deadlines/exportData';
+import { importData } from './deadlines/importData';
 import { archiveDeadline } from './deadlines/archiveDeadline';
 import { softDeleteDeadline } from './deadlines/softDeleteDeadline';
 import { restoreDeadline } from './deadlines/restoreDeadline';
@@ -35,9 +36,10 @@ exports.sendReminders = functions.pubsub
   .timeZone('Europe/Rome')
   .onRun(sendReminders);
 
-// Export Functions
+// Export/Import Functions
 exports.generateIcs = functions.https.onCall(generateIcs);
 exports.exportData = functions.https.onCall(exportData);
+exports.importData = functions.https.onCall(importData);
 
 // Archive Functions
 exports.archiveDeadline = functions.https.onCall(archiveDeadline);

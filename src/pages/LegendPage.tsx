@@ -217,14 +217,14 @@ export const LegendPage: React.FC = () => {
             <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
               <div>
                 <label htmlFor="initials" className="block text-sm font-medium text-gray-700">
-                  Iniziali (2 caratteri)
+                  Iniziali (2-3 caratteri)
                 </label>
                 <input
                   type="text"
                   id="initials"
                   value={formData.initials}
                   onChange={(e) => setFormData({ ...formData, initials: e.target.value })}
-                  maxLength={2}
+                  maxLength={3}
                   required
                   className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm uppercase"
                 />
