@@ -32,6 +32,7 @@ export const DeadlineStatus = {
   FARE: 'FARE',
   NON_FARE: 'NON_FARE',
   FATTO: 'FATTO',
+  GIUDIZIO_TRANSATTO: 'GIUDIZIO_TRANSATTO',
   DEPOSITARE: 'DEPOSITARE',
   NOTIFICARE: 'NOTIFICARE',
   DEPOSITATO: 'DEPOSITATO',
@@ -45,6 +46,7 @@ export const STATUS_DISPLAY_MAP: Record<DeadlineStatus, string[]> = {
   [DeadlineStatus.FARE]: ['FARE', 'DA FARE'],
   [DeadlineStatus.NON_FARE]: ['NON FARE', 'NON DA FARE'],
   [DeadlineStatus.FATTO]: ['FATTO', 'FATTA'],
+  [DeadlineStatus.GIUDIZIO_TRANSATTO]: ['GIUDIZIO TRANSATTO', 'TRANSATTO'],
   [DeadlineStatus.DEPOSITARE]: ['DEPOSITARE', 'DA DEPOSITARE'],
   [DeadlineStatus.NOTIFICARE]: ['NOTIFICARE', 'DA NOTIFICARE'],
   [DeadlineStatus.DEPOSITATO]: ['DEPOSITATO', 'DEPOSITATA'],
@@ -115,6 +117,33 @@ export interface DeadlineFilter {
   status?: DeadlineStatus;
   searchText?: string;
   archived?: boolean;
+}
+
+// Macro deadline interface
+export interface MacroDeadline {
+  type: 'macro';
+  macroType: '171-ter' | '189' | '281-duodecies';
+  hearingDate: Date;
+  commonData: {
+    ownerInitials: string;
+    matter: string;
+    court: string;
+    forum?: string;
+    rg: string;
+    status?: DeadlineStatus;
+    notes?: string;
+  };
+  includeSummerSuspension?: boolean;
+}
+
+// Batch deadline creation result
+export interface BatchDeadlineResult {
+  success: boolean;
+  created: number;
+  errors: Array<{
+    deadline: string;
+    error: string;
+  }>;
 }
 
 // Auth context interface

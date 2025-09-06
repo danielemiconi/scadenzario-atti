@@ -17,15 +17,16 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
   const [error, setError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
-    ownerInitials: deadline?.ownerInitials || '',
+    ownerInitials: deadline?.ownerInitials || (isCloning ? '' : user?.initials || ''),
     matter: deadline?.matter || '',
     court: deadline?.court || '',
     forum: deadline?.forum || '',
     rg: deadline?.rg || '',
     actType: deadline?.actType || '',
-    hearingDate: deadline ? format(deadline.hearingDate.toDate(), 'yyyy-MM-dd') : '',
+    // Se stiamo clonando, mantenere hearingDate dall'originale
+    hearingDate: deadline?.hearingDate ? format(deadline.hearingDate.toDate(), 'yyyy-MM-dd') : '',
     status: deadline?.status || '',
-    // Se stiamo clonando, non pre-compilare statusDate (è stato resettato)
+    // Se stiamo clonando, NON pre-compilare statusDate (deve essere vuoto)
     statusDate: (isCloning || !deadline?.statusDate) ? '' : format(deadline.statusDate.toDate(), 'yyyy-MM-dd'),
     notes: deadline?.notes || '',
   });
@@ -100,7 +101,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
     } else {
       setFormData({
         ...formData,
-        [name]: value,
+        [name]: (name === 'matter' || name === 'forum' || name === 'notes') ? value.toUpperCase() : value,
       });
     }
   };
@@ -131,10 +132,12 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
         throw new Error('Formato RG non valido. Usa il formato: 123/2025');
       }
 
-      const hearingDate = new Date(formData.hearingDate);
-      const monthYear = calculateMonthYear(hearingDate);
-
-      const deadlineData = {
+      // Calculate monthYear usando statusDate (sempre presente) o hearingDate come fallback
+      const statusDate = new Date(formData.statusDate);
+      const monthYear = calculateMonthYear(statusDate);
+      
+      // Dati base comuni per create e update (senza archived/deleted)
+      const baseDeadlineData = {
         monthYear,
         ownerInitials: formData.ownerInitials.toUpperCase(),
         matter: formData.matter,
@@ -142,25 +145,25 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
         forum: formData.forum,
         rg: formData.rg,
         actType: formData.actType.toUpperCase(),
-        hearingDate: Timestamp.fromDate(hearingDate),
+        hearingDate: formData.hearingDate ? Timestamp.fromDate(new Date(formData.hearingDate)) : null,
         status: formData.status as DeadlineStatus || null,
-        statusDate: formData.statusDate ? Timestamp.fromDate(new Date(formData.statusDate)) : null,
+        statusDate: Timestamp.fromDate(statusDate),
         notes: formData.notes,
-        archived: false,
-        deleted: false,
         updatedAt: serverTimestamp(),
       };
 
       if (deadline && !isCloning) {
-        // Update existing deadline
+        // Update existing deadline - NON modificare archived/deleted
         await updateDoc(doc(db, 'deadlines', deadline.id!), {
-          ...deadlineData,
+          ...baseDeadlineData,
           updatedBy: user?.uid,
         });
       } else {
         // Create new deadline (anche nel caso di clonazione)
         await addDoc(collection(db, 'deadlines'), {
-          ...deadlineData,
+          ...baseDeadlineData,
+          archived: false,
+          deleted: false,
           createdBy: user?.uid,
           createdAt: serverTimestamp(),
         });
@@ -198,7 +201,6 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
                 onChange={handleChange}
                 maxLength={3}
                 required
-                disabled={user?.role === 'standard' && !deadline}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm uppercase disabled:bg-gray-100"
               />
             </div>
@@ -313,7 +315,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="hearingDate" className="block text-sm font-medium text-gray-700">
-                Data Scadenza*
+                Data Udienza
               </label>
               <input
                 type="date"
@@ -321,7 +323,6 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
                 name="hearingDate"
                 value={formData.hearingDate}
                 onChange={handleChange}
-                required
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
               />
             </div>
@@ -349,7 +350,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
 
           <div>
             <label htmlFor="statusDate" className="block text-sm font-medium text-gray-700">
-              Data Udienza
+              Data Scadenza*
             </label>
             <input
               type="date"
@@ -357,6 +358,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
               name="statusDate"
               value={formData.statusDate}
               onChange={handleChange}
+              required
               className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
             />
           </div>

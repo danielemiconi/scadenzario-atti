@@ -11,14 +11,18 @@ export const calculateMonthYear = async (
     return null; // Document was deleted
   }
 
+  // Use statusDate as primary, hearingDate as fallback
+  const statusDate = newData.statusDate;
   const hearingDate = newData.hearingDate;
-  if (!hearingDate) {
-    console.error('No hearing date found for deadline');
+  
+  let dateToUse = statusDate || hearingDate;
+  if (!dateToUse) {
+    console.error('No statusDate or hearingDate found for deadline');
     return null;
   }
 
   // Convert Firestore Timestamp to Date
-  const date = hearingDate.toDate();
+  const date = dateToUse.toDate();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const calculatedMonthYear = `${year}-${month}`;

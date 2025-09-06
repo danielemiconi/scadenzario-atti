@@ -5,6 +5,7 @@ import { type Deadline, type DeadlineFilter } from '../types';
 import { DeadlineList } from '../components/deadlines/DeadlineList';
 import { DeadlineFilters } from '../components/deadlines/DeadlineFilters';
 import { DeadlineForm } from '../components/deadlines/DeadlineForm';
+import { MacroDeadlineForm } from '../components/deadlines/MacroDeadlineForm';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 export const Dashboard: React.FC = () => {
@@ -12,6 +13,7 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<DeadlineFilter>({});
   const [showForm, setShowForm] = useState(false);
+  const [showMacroForm, setShowMacroForm] = useState(false);
   const [editingDeadline, setEditingDeadline] = useState<Deadline | null>(null);
   const [cloningDeadline, setCloningDeadline] = useState<Deadline | null>(null);
 
@@ -76,6 +78,16 @@ export const Dashboard: React.FC = () => {
         );
       }
       
+      // Sort globally by statusDate before grouping
+      filteredData.sort((a, b) => {
+        // Handle cases where statusDate might be null/undefined
+        if (!a.statusDate && !b.statusDate) return 0;
+        if (!a.statusDate) return 1; // Put items without statusDate at the end
+        if (!b.statusDate) return -1; // Put items without statusDate at the end
+        
+        return a.statusDate.toDate().getTime() - b.statusDate.toDate().getTime();
+      });
+      
       setDeadlines(filteredData);
       setLoading(false);
     });
@@ -116,6 +128,10 @@ export const Dashboard: React.FC = () => {
     setCloningDeadline(null);
   };
 
+  const handleCloseMacroForm = () => {
+    setShowMacroForm(false);
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -132,15 +148,34 @@ export const Dashboard: React.FC = () => {
     return appliedFilters;
   };
 
-  // Group deadlines by month
-  const groupedDeadlines = deadlines.reduce((acc, deadline) => {
-    const monthKey = deadline.monthYear;
-    if (!acc[monthKey]) {
-      acc[monthKey] = [];
+  // Create a structure to show deadlines sorted by statusDate with month headers
+  const sortedDeadlines = [...deadlines]; // Already sorted by statusDate from above
+  
+  // Track which months we've already shown headers for
+  const monthsShown = new Set<string>();
+  
+  // Build structure for rendering with month headers
+  const deadlinesWithHeaders: Array<{ type: 'header' | 'deadline', monthYear?: string, deadline?: Deadline }> = [];
+  
+  sortedDeadlines.forEach(deadline => {
+    // Use statusDate for month grouping instead of monthYear
+    let monthKey: string;
+    if (deadline.statusDate) {
+      const date = deadline.statusDate.toDate();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      monthKey = `${year}-${month}`;
+    } else {
+      // Fallback to monthYear if statusDate is not available
+      monthKey = deadline.monthYear;
     }
-    acc[monthKey].push(deadline);
-    return acc;
-  }, {} as Record<string, Deadline[]>);
+    
+    if (!monthsShown.has(monthKey)) {
+      monthsShown.add(monthKey);
+      deadlinesWithHeaders.push({ type: 'header', monthYear: monthKey });
+    }
+    deadlinesWithHeaders.push({ type: 'deadline', deadline });
+  });
 
   const monthNames: Record<string, string> = {
     '01': 'GENNAIO',
@@ -184,6 +219,15 @@ export const Dashboard: React.FC = () => {
             Stampa
           </button>
           <button
+            onClick={() => setShowMacroForm(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            Macro
+          </button>
+          <button
             onClick={() => setShowForm(true)}
             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           >
@@ -196,28 +240,63 @@ export const Dashboard: React.FC = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
-            {Object.keys(groupedDeadlines)
-              .sort()
-              .map((monthYear) => {
-                const [year, month] = monthYear.split('-');
-                const monthName = monthNames[month] || month;
-                
-                return (
-                  <div key={monthYear} className="px-4 py-5 sm:px-6 month-section">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4 month-title">
-                      {monthName} {year}
-                    </h4>
-                    <DeadlineList
-                      deadlines={groupedDeadlines[monthYear]}
-                      onEdit={handleEdit}
-                      onClone={handleClone}
-                    />
-                  </div>
-                );
-              })}
-            
-            {deadlines.length === 0 && (
+          <div>
+            {deadlinesWithHeaders.length > 0 ? (
+              <>
+                {(() => {
+                  let currentMonthDeadlines: Deadline[] = [];
+                  let currentMonthYear: string | null = null;
+                  const elements: React.ReactElement[] = [];
+                  
+                  deadlinesWithHeaders.forEach((item, index) => {
+                    if (item.type === 'header') {
+                      // Render previous month's deadlines if any
+                      if (currentMonthYear && currentMonthDeadlines.length > 0) {
+                        const [year, month] = currentMonthYear.split('-');
+                        const monthName = monthNames[month] || month;
+                        elements.push(
+                          <div key={currentMonthYear} className="px-4 py-5 sm:px-6 month-section border-b border-gray-200">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-4 month-title">
+                              {monthName} {year}
+                            </h4>
+                            <DeadlineList
+                              deadlines={currentMonthDeadlines}
+                              onEdit={handleEdit}
+                              onClone={handleClone}
+                            />
+                          </div>
+                        );
+                      }
+                      // Start new month
+                      currentMonthYear = item.monthYear!;
+                      currentMonthDeadlines = [];
+                    } else if (item.type === 'deadline') {
+                      currentMonthDeadlines.push(item.deadline!);
+                    }
+                    
+                    // Handle last group
+                    if (index === deadlinesWithHeaders.length - 1 && currentMonthYear && currentMonthDeadlines.length > 0) {
+                      const [year, month] = currentMonthYear.split('-');
+                      const monthName = monthNames[month] || month;
+                      elements.push(
+                        <div key={`${currentMonthYear}-last`} className="px-4 py-5 sm:px-6 month-section border-b border-gray-200">
+                          <h4 className="text-lg font-semibold text-gray-900 mb-4 month-title">
+                            {monthName} {year}
+                          </h4>
+                          <DeadlineList
+                            deadlines={currentMonthDeadlines}
+                            onEdit={handleEdit}
+                            onClone={handleClone}
+                          />
+                        </div>
+                      );
+                    }
+                  });
+                  
+                  return elements;
+                })()}
+              </>
+            ) : (
               <div className="text-center py-12 text-gray-500">
                 Nessun atto trovato con i filtri selezionati
               </div>
@@ -231,6 +310,13 @@ export const Dashboard: React.FC = () => {
           deadline={editingDeadline || cloningDeadline}
           isCloning={!!cloningDeadline}
           onClose={handleCloseForm}
+        />
+      )}
+
+      {showMacroForm && (
+        <MacroDeadlineForm
+          onClose={handleCloseMacroForm}
+          onSuccess={handleCloseMacroForm}
         />
       )}
     </div>
