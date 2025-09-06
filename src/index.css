@@ -12,7 +12,7 @@ body {
 
 @media print {
   @page {
-    margin: 1cm;
+    margin: 0.5cm;
     size: A4 landscape;
   }
   
@@ -20,7 +20,7 @@ body {
     background-color: white;
     color: black;
     font-size: 12px;
-    line-height: 1.2;
+    line-height: 1.1;
   }
   
   .no-print {
@@ -31,8 +31,8 @@ body {
   .print-header {
     display: block !important;
     text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
+    margin-bottom: 5px;
+    padding-bottom: 3px;
     border-bottom: 2px solid #333;
   }
   
@@ -60,7 +60,7 @@ body {
   
   th, td {
     border: 1px solid #ddd;
-    padding: 4px 6px;
+    padding: 1px 3px;
     text-align: left;
     word-break: break-word;
   }
@@ -75,7 +75,7 @@ body {
   .month-title {
     font-size: 16px;
     font-weight: bold;
-    margin: 20px 0 10px 0;
+    margin: 5px 0 2px 0;
     page-break-before: avoid;
     page-break-after: avoid;
   }
@@ -84,21 +84,25 @@ body {
   .bg-red-100 {
     background-color: #fee2e2 !important;
     color: #991b1b !important;
+    font-size: 10px;
   }
   
   .bg-yellow-100 {
     background-color: #fef3c7 !important;
     color: #92400e !important;
+    font-size: 10px;
   }
   
   .bg-green-100 {
     background-color: #dcfce7 !important;
     color: #166534 !important;
+    font-size: 10px;
   }
   
   .bg-red-200 {
     background-color: #fecaca !important;
     color: #991b1b !important;
+    font-size: 10px;
   }
   
   /* Badge degli stati */
@@ -109,9 +113,9 @@ body {
   .bg-green-100.text-green-800,
   .bg-purple-100.text-purple-800,
   .bg-gray-100.text-gray-800 {
-    padding: 2px 4px;
+    padding: 1px 3px;
     border-radius: 3px;
-    font-size: 8px;
+    font-size: 10px;
     font-weight: bold;
   }
   
@@ -129,6 +133,6 @@ body {
   /* Spazio tra i mesi */
   .month-section {
     page-break-before: avoid;
-    margin-bottom: 30px;
+    margin-bottom: 5px;
   }
 }

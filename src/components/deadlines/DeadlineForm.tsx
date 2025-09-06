@@ -4,6 +4,7 @@ import { db } from '../../lib/firebase/config';
 import { type Deadline, DeadlineStatus, STATUS_DISPLAY_MAP } from '../../types';
 import { useAuth } from '../../contexts/AuthContext';
 import { format } from 'date-fns';
+import { useLegend } from '../../hooks/useLegend';
 
 interface DeadlineFormProps {
   deadline: Deadline | null;
@@ -13,11 +14,12 @@ interface DeadlineFormProps {
 
 export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning = false, onClose }) => {
   const { user } = useAuth();
+  const { validInitials, loading: legendLoading } = useLegend();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
-    ownerInitials: deadline?.ownerInitials || (isCloning ? '' : user?.initials || ''),
+    ownerInitials: deadline?.ownerInitials || '',
     matter: deadline?.matter || '',
     court: deadline?.court || '',
     forum: deadline?.forum || '',
@@ -101,7 +103,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
     } else {
       setFormData({
         ...formData,
-        [name]: (name === 'matter' || name === 'forum' || name === 'notes') ? value.toUpperCase() : value,
+        [name]: (name === 'matter' || name === 'forum') ? value.toUpperCase() : value,
       });
     }
   };
@@ -130,6 +132,15 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
       // Validate RG format
       if (!formData.rg.match(/^\d{1,6}\/\d{4}$/)) {
         throw new Error('Formato RG non valido. Usa il formato: 123/2025');
+      }
+
+      // Validate owner initials
+      if (!formData.ownerInitials) {
+        throw new Error('Le iniziali sono obbligatorie');
+      }
+      
+      if (!validInitials.includes(formData.ownerInitials)) {
+        throw new Error('Le iniziali selezionate non sono valide. Seleziona dalle opzioni disponibili nella legenda.');
       }
 
       // Calculate monthYear usando statusDate (sempre presente) o hearingDate come fallback
@@ -193,16 +204,31 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
               <label htmlFor="ownerInitials" className="block text-sm font-medium text-gray-700">
                 Iniziali*
               </label>
-              <input
-                type="text"
-                id="ownerInitials"
-                name="ownerInitials"
-                value={formData.ownerInitials}
-                onChange={handleChange}
-                maxLength={3}
-                required
-                className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm uppercase disabled:bg-gray-100"
-              />
+              {legendLoading ? (
+                <div className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm py-2 px-3 bg-gray-50 text-gray-500">
+                  Caricamento iniziali...
+                </div>
+              ) : validInitials.length === 0 ? (
+                <div className="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 text-gray-500">
+                  Nessuna iniziale disponibile nella legenda
+                </div>
+              ) : (
+                <select
+                  id="ownerInitials"
+                  name="ownerInitials"
+                  value={formData.ownerInitials}
+                  onChange={handleChange}
+                  required
+                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                >
+                  <option value="">Seleziona...</option>
+                  {validInitials.map((initials) => (
+                    <option key={initials} value={initials}>
+                      {initials}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
@@ -251,14 +277,15 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
               >
                 <option value="">Seleziona...</option>
-                <option value="GIUDICE DI PACE">GIUDICE DI PACE</option>
-                <option value="TRIBUNALE">TRIBUNALE</option>
-                <option value="CORTE DI APPELLO">CORTE DI APPELLO</option>
-                <option value="CORTE DI CASSAZIONE">CORTE DI CASSAZIONE</option>
+                <option value="G.D.P.">G.D.P.</option>
+                <option value="TRIB.">TRIB.</option>
+                <option value="C.A.P.">C.A.P.</option>
+                <option value="CASS. CIV.">CASS. CIV.</option>
+                <option value="CASS. PEN.">CASS. PEN.</option>
                 <option value="T.A.R.">T.A.R.</option>
-                <option value="CONSIGLIO DI STATO">CONSIGLIO DI STATO</option>
-                <option value="CORTE GIUSTIZIA TRIBUTARIA DI I° GRADO">CORTE GIUSTIZIA TRIBUTARIA DI I° GRADO</option>
-                <option value="CORTE GIUSTIZIA TRIBUTARIA DI II° GRADO">CORTE DI GIUSTIZIA TRIBUTARIA DI II° GRADO</option>
+                <option value="C.D.S.">C.D.S.</option>
+                <option value="CORTE GIUST.  TRIB. I°">CORTE GIUST.  TRIB. I°</option>
+                <option value="CORTE GIUST.  TRIB. II°.">CORTE GIUST.  TRIB. II°.</option>
               </select>
             </div>
             <div>
@@ -373,7 +400,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
               value={formData.notes}
               onChange={handleChange}
               rows={3}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm italic"
             />
           </div>
 

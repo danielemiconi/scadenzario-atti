@@ -113,15 +113,22 @@ export async function createMacroDeadlines(
           rg: macro.commonData.rg,
           actType: calc.type.toUpperCase(),
           hearingDate: Timestamp.fromDate(macro.hearingDate),
-          status: macro.commonData.status || undefined,
           statusDate: Timestamp.fromDate(calc.date),
-          notes: macro.commonData.notes || `${calc.description} (creato da macro ${macro.macroType})`,
           archived: false,
           deleted: false,
           createdBy: userId,
           createdAt: serverTimestamp() as Timestamp,
           updatedAt: serverTimestamp() as Timestamp
         };
+
+        // Aggiungi solo i campi opzionali se hanno valori
+        if (macro.commonData.status) {
+          deadlineData.status = macro.commonData.status;
+        }
+        
+        if (macro.commonData.notes) {
+          deadlineData.notes = macro.commonData.notes;
+        }
         
         deadlinesToCreate.push(deadlineData);
       }

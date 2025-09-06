@@ -36,14 +36,15 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
   });
 
   const predefinedCourts = [
-    'GIUDICE DI PACE',
-    'TRIBUNALE',
-    'CORTE DI APPELLO',
-    'CORTE DI CASSAZIONE',
+    'G.D.P.',
+    'TRIB.',
+    'C.A.P.',
+    'CASS. CIV.',
+    'CASS. PEN.',
     'T.A.R.',
-    'CONSIGLIO DI STATO',
-    'CORTE GIUSTIZIA TRIBUTARIA DI I° GRADO',
-    'CORTE GIUSTIZIA TRIBUTARIA DI II° GRADO'
+    'C.D.S.',
+    'CORTE GIUST.  TRIB. I°',
+    'CORTE GIUST.  TRIB. II°.'
   ];
 
   const macroTypeLabels = {
@@ -67,16 +68,16 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
     }
   }, [formData.hearingDate, formData.macroType, formData.includeSummerSuspension]);
 
-  // Imposta automaticamente l'ufficio su TRIBUNALE per macro 171-ter e 189
+  // Imposta automaticamente l'ufficio su TRIB. per macro 171-ter e 189
   useEffect(() => {
     if (formData.macroType === '171-ter' || formData.macroType === '189') {
       setFormData(prevData => ({
         ...prevData,
-        court: 'TRIBUNALE'
+        court: 'TRIB.'
       }));
     } else if (formData.macroType === '281-duodecies') {
       // Reset del campo se il valore attuale non è valido per 281-duodecies
-      if (formData.court && formData.court !== 'GIUDICE DI PACE' && formData.court !== 'TRIBUNALE') {
+      if (formData.court && formData.court !== 'G.D.P.' && formData.court !== 'TRIB.') {
         setFormData(prevData => ({
           ...prevData,
           court: ''
@@ -412,7 +413,7 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
                     >
                       <option value="">Seleziona...</option>
                       {(formData.macroType === '281-duodecies' 
-                        ? predefinedCourts.filter(court => court === 'GIUDICE DI PACE' || court === 'TRIBUNALE')
+                        ? predefinedCourts.filter(court => court === 'G.D.P.' || court === 'TRIB.')
                         : predefinedCourts
                       ).map((court) => (
                         <option key={court} value={court}>

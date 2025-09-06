@@ -126,37 +126,37 @@ export const DeadlineList: React.FC<DeadlineListProps> = ({ deadlines, onEdit, o
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Ini
             </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Pratica
             </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Ufficio
             </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Foro
             </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               R.G.
             </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Tipo Atto
             </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Stato
             </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Data Udienza
             </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Note
             </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Data Scadenza
             </th>
-            <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">
+            <th className="px-3 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider no-print">
               Azioni
             </th>
           </tr>
@@ -164,7 +164,7 @@ export const DeadlineList: React.FC<DeadlineListProps> = ({ deadlines, onEdit, o
         <tbody className="bg-white divide-y divide-gray-200">
           {deadlines.map((deadline) => (
             <tr key={deadline.id} className="hover:bg-gray-50">
-              <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+              <td className="px-3 py-1 whitespace-nowrap text-sm font-medium">
                 <div 
                   className="inline-flex items-center justify-center w-8 h-6 text-xs font-bold rounded"
                   style={{
@@ -175,40 +175,40 @@ export const DeadlineList: React.FC<DeadlineListProps> = ({ deadlines, onEdit, o
                   {deadline.ownerInitials}
                 </div>
               </td>
-              <td className="px-3 py-4 text-sm text-gray-900">
+              <td className="px-3 py-1 text-sm text-gray-900">
                 {deadline.matter}
               </td>
-              <td className="px-3 py-4 text-sm text-gray-900">
+              <td className="px-3 py-1 text-sm text-gray-900">
                 {deadline.court}
               </td>
-              <td className="px-3 py-4 text-sm text-gray-900">
+              <td className="px-3 py-1 text-sm text-gray-900">
                 {deadline.forum || ''}
               </td>
-              <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-3 py-1 whitespace-nowrap text-sm text-gray-900">
                 {deadline.rg}
               </td>
-              <td className="px-3 py-4 text-sm text-gray-900">
+              <td className="px-3 py-1 text-sm text-gray-900">
                 {deadline.actType}
               </td>
-              <td className="px-3 py-4 whitespace-nowrap">
+              <td className="px-3 py-1 whitespace-nowrap">
                 {deadline.status && (
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(deadline.status)}`}>
                     {getStatusDisplay(deadline.status)}
                   </span>
                 )}
               </td>
-              <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+              <td className="px-3 py-1 whitespace-nowrap text-sm text-gray-900">
                 {deadline.hearingDate ? format(deadline.hearingDate.toDate(), 'dd.MM.yy') : '-'}
               </td>
-              <td className="px-3 py-4 text-sm text-gray-900">
-                {deadline.notes}
+              <td className="px-3 py-1 text-sm text-gray-900 italic text-center">
+                {deadline.notes || '-'}
               </td>
-              <td className="px-3 py-4 whitespace-nowrap text-sm font-bold">
+              <td className="px-3 py-1 whitespace-nowrap text-sm font-bold">
                 <div className={`px-2 py-1 rounded text-center ${getDeadlineHighlight(deadline.statusDate ? deadline.statusDate.toDate() : new Date())}`}>
                   {deadline.statusDate ? format(deadline.statusDate.toDate(), 'dd.MM.yy') : '-'}
                 </div>
               </td>
-              <td className="px-3 py-4 whitespace-nowrap text-sm font-medium no-print">
+              <td className="px-3 py-1 whitespace-nowrap text-sm font-medium no-print">
                 <div className="inline-flex items-center space-x-2">
                   <button
                     onClick={() => onEdit(deadline)}
