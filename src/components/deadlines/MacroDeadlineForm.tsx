@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { type MacroDeadline, DeadlineStatus, STATUS_DISPLAY_MAP } from '../../types';
 import { calculateMacroDeadlines, formatDeadlineDate, calculateDaysRemaining, type DeadlineCalculation } from '../../utils/legalDeadlines';
 import { createMacroDeadlines } from '../../services/deadlineService';
+import { useLegend } from '../../hooks/useLegend';
 
 interface MacroDeadlineFormProps {
   onClose: () => void;
@@ -13,6 +14,7 @@ interface MacroDeadlineFormProps {
 
 export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, onSuccess }) => {
   const { user } = useAuth();
+  const { validInitials, loading: legendLoading } = useLegend();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
   const [formData, setFormData] = useState({
     macroType: '171-ter' as MacroDeadline['macroType'],
     hearingDate: '',
-    ownerInitials: user?.initials || '',
+    ownerInitials: '',
     matter: '',
     court: '',
     forum: '',
@@ -65,6 +67,24 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
     }
   }, [formData.hearingDate, formData.macroType, formData.includeSummerSuspension]);
 
+  // Imposta automaticamente l'ufficio su TRIBUNALE per macro 171-ter e 189
+  useEffect(() => {
+    if (formData.macroType === '171-ter' || formData.macroType === '189') {
+      setFormData(prevData => ({
+        ...prevData,
+        court: 'TRIBUNALE'
+      }));
+    } else if (formData.macroType === '281-duodecies') {
+      // Reset del campo se il valore attuale non è valido per 281-duodecies
+      if (formData.court && formData.court !== 'GIUDICE DI PACE' && formData.court !== 'TRIBUNALE') {
+        setFormData(prevData => ({
+          ...prevData,
+          court: ''
+        }));
+      }
+    }
+  }, [formData.macroType]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     
@@ -77,7 +97,7 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
     } else {
       setFormData({
         ...formData,
-        [name]: value
+        [name]: (name === 'matter' || name === 'forum') ? value.toUpperCase() : value,
       });
     }
   };
@@ -90,6 +110,11 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
     
     if (!formData.ownerInitials) {
       setError('Le iniziali sono obbligatorie');
+      return false;
+    }
+    
+    if (!validInitials.includes(formData.ownerInitials)) {
+      setError('Le iniziali selezionate non sono valide. Seleziona dalle opzioni disponibili nella legenda.');
       return false;
     }
     
@@ -307,16 +332,31 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
                     <label htmlFor="ownerInitials" className="block text-sm font-medium text-gray-700">
                       Iniziali*
                     </label>
-                    <input
-                      type="text"
-                      id="ownerInitials"
-                      name="ownerInitials"
-                      value={formData.ownerInitials}
-                      onChange={handleChange}
-                      maxLength={3}
-                      required
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm uppercase"
-                    />
+                    {legendLoading ? (
+                      <div className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm py-2 px-3 bg-gray-50 text-gray-500">
+                        Caricamento iniziali...
+                      </div>
+                    ) : validInitials.length === 0 ? (
+                      <div className="mt-1 block w-full border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 text-gray-500">
+                        Nessuna iniziale disponibile nella legenda
+                      </div>
+                    ) : (
+                      <select
+                        id="ownerInitials"
+                        name="ownerInitials"
+                        value={formData.ownerInitials}
+                        onChange={handleChange}
+                        required
+                        className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                      >
+                        <option value="">Seleziona...</option>
+                        {validInitials.map((initials) => (
+                          <option key={initials} value={initials}>
+                            {initials}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
 
                   <div>
@@ -356,7 +396,8 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
                     <label htmlFor="court" className="block text-sm font-medium text-gray-700">
-                      Ufficio*
+                      Ufficio* {(formData.macroType === '171-ter' || formData.macroType === '189') && <span className="text-xs text-blue-600">(automatico per {formData.macroType})</span>}
+                      {formData.macroType === '281-duodecies' && <span className="text-xs text-green-600">(solo G.d.P. o Tribunale)</span>}
                     </label>
                     <select
                       id="court"
@@ -364,10 +405,16 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
                       value={formData.court}
                       onChange={handleChange}
                       required
-                      className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                      disabled={formData.macroType === '171-ter' || formData.macroType === '189'}
+                      className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm ${
+                        (formData.macroType === '171-ter' || formData.macroType === '189') ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : ''
+                      }`}
                     >
                       <option value="">Seleziona...</option>
-                      {predefinedCourts.map((court) => (
+                      {(formData.macroType === '281-duodecies' 
+                        ? predefinedCourts.filter(court => court === 'GIUDICE DI PACE' || court === 'TRIBUNALE')
+                        : predefinedCourts
+                      ).map((court) => (
                         <option key={court} value={court}>
                           {court}
                         </option>
@@ -424,7 +471,7 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
                     onChange={handleChange}
                     rows={2}
                     placeholder="Queste note verranno aggiunte a tutte le scadenze create"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm italic"
                   />
                 </div>
               </div>
