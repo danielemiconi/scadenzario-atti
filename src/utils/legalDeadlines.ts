@@ -128,8 +128,8 @@ function calculateCalendarDaysBackward(
       // Salta tutto agosto andando al 31 luglio
       const year = getYear(currentDate);
       currentDate = new Date(year, 6, 31); // 31 luglio
-      // Continuiamo il ciclo senza decrementare remainingDays
-      // perché agosto non conta nel calcolo
+      // Il 31 luglio deve essere contato come giorno valido
+      remainingDays--;
       continue;
     }
     
@@ -315,16 +315,17 @@ export function debugCalculateCalendarDaysBackward(
     if (includeSummerSuspension && isInSummerSuspension(currentDate)) {
       const year = getYear(currentDate);
       currentDate = new Date(year, 6, 31); // Salta al 31 luglio
-      note = `Entrato in agosto dal ${format(previousDate, 'dd/MM')}, salto tutto agosto → 31 luglio`;
-      isCountedDay = false; // Agosto non conta
+      note = `Entrato in agosto dal ${format(previousDate, 'dd/MM')}, salto tutto agosto → 31 luglio (conta come giorno valido)`;
+      isCountedDay = true; // Il 31 luglio conta
+      remainingDays--; // Il 31 luglio deve essere contato
       steps.push({
         date: format(currentDate, 'dd/MM/yyyy'),
         dayOfWeek: daysOfWeek[currentDate.getDay()],
-        isCountedDay: false,
+        isCountedDay: true,
         remainingDays,
         note
       });
-      continue; // Non decrementare remainingDays per agosto
+      continue;
     }
     
     // Ogni giorno di calendario conta (anche weekend e festivi)
