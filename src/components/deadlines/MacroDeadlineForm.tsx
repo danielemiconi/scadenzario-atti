@@ -32,7 +32,7 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
     rg: '',
     status: '',
     notes: '',
-    includeSummerSuspension: false
+    includeSummerSuspension: true
   });
 
   const predefinedCourts = [
