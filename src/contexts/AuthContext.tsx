@@ -26,6 +26,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [tenants, setTenants] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -38,15 +39,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const customClaims = tokenResult.claims;
           
           console.log('Firebase Auth custom claims:', customClaims);
-          
+
+          // Extract tenants from custom claims
+          let userTenants = (customClaims.tenants as string[]) || [];
+
+          // Special case for super admin - always has default tenant
+          if (firebaseUser.email === 'daniele.miconi@iblegal.it' && userTenants.length === 0) {
+            userTenants = ['default'];
+          }
+
+          setTenants(userTenants);
+
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
             const userData = userDoc.data() as User;
             // Use role from custom claims if available, fallback to Firestore
             const roleFromClaims = (customClaims.role as UserRole) || userData.role;
             setUser({ ...userData, uid: firebaseUser.uid, role: roleFromClaims });
-            
+
             console.log('User loaded with role:', roleFromClaims);
+            console.log('User tenants:', userTenants);
           } else {
             // If user document doesn't exist, create a basic one
             const newUser: User = {
@@ -60,6 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             };
             await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
             setUser(newUser);
+            setTenants([]); // New user has no tenants initially
           }
         } catch (err) {
           console.error('Error fetching user data:', err);
@@ -67,6 +80,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } else {
         setUser(null);
+        setTenants(null);
       }
       setLoading(false);
     });
@@ -138,14 +152,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const refreshToken = async () => {
+    if (!auth.currentUser) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      // Force token refresh
+      const tokenResult = await auth.currentUser.getIdTokenResult(true);
+      const customClaims = tokenResult.claims;
+
+      // Update tenants from refreshed claims
+      const userTenants = (customClaims.tenants as string[]) || [];
+      setTenants(userTenants);
+
+      console.log('Token refreshed, tenants:', userTenants);
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  };
+
   const value: AuthContextType = {
     user,
+    tenants,
     loading,
     error,
     signIn,
     signUp,
     signOut,
     updateProfile,
+    refreshToken,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

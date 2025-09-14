@@ -1,6 +1,9 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { setUserRole } from './auth/setUserRole';
+import { provisionUserOnInvite } from './auth/provisionUserOnInvite';
+import { onUserCreate } from './auth/onUserCreate';
+import { updateTenantMembership } from './auth/updateTenantMembership';
 import { calculateMonthYear } from './deadlines/calculateMonthYear';
 import { checkDuplicates } from './deadlines/checkDuplicates';
 import { sendReminders } from './notifications/sendReminders';
@@ -13,6 +16,7 @@ import { restoreDeadline } from './deadlines/restoreDeadline';
 import { emptyTrash } from './deadlines/emptyTrash';
 import { permanentlyDelete } from './deadlines/permanentlyDelete';
 import { runMigration } from './migrations/addMissingFields';
+import { migrateSingleTenant } from './migrations/migrateSingleTenant';
 import { auditLogger } from './utils/auditLogger';
 
 // Initialize Firebase Admin
@@ -20,6 +24,9 @@ admin.initializeApp();
 
 // Auth Functions
 exports.setUserRole = functions.https.onCall(setUserRole);
+exports.provisionUserOnInvite = functions.https.onCall(provisionUserOnInvite);
+exports.onUserCreate = onUserCreate;
+exports.updateTenantMembership = functions.https.onCall(updateTenantMembership);
 
 // Deadline Functions
 exports.calculateMonthYear = functions.firestore
@@ -52,6 +59,7 @@ exports.permanentlyDelete = functions.https.onCall(permanentlyDelete);
 
 // Migration Functions
 exports.runMigration = functions.https.onCall(runMigration);
+exports.migrateSingleTenant = functions.https.onCall(migrateSingleTenant);
 
 // Audit Functions
 exports.auditLogger = functions.firestore

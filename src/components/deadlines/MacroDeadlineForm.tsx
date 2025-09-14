@@ -43,6 +43,7 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
     'CASS. PEN.',
     'T.A.R.',
     'C.D.S.',
+    'C.G.U.E.',
     'CORTE GIUST.  TRIB. I°',
     'CORTE GIUST.  TRIB. II°.'
   ];
@@ -50,7 +51,9 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
   const macroTypeLabels = {
     '171-ter': 'Art. 171-ter C.P.C. (Memorie integrative)',
     '189': 'Art. 189 C.P.C. (Precisazione conclusioni)',
-    '281-duodecies': 'Art. 281-duodecies C.P.C. (Memorie)'
+    '281-duodecies': 'Art. 281-duodecies C.P.C. (Memorie)',
+    'appello-lungo': 'Atto di appello (termine lungo)',
+    'appello-breve': 'Atto di appello (termine breve)'
   };
 
   // Calcola le scadenze quando cambiano i parametri rilevanti
@@ -129,14 +132,23 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
       return false;
     }
     
-    if (!formData.rg) {
-      setError('Il ruolo generale è obbligatorio');
-      return false;
-    }
-    
-    if (!formData.rg.match(/^\d{1,6}\/\d{4}$/)) {
-      setError('Formato RG non valido. Usa il formato: 123/2025');
-      return false;
+    // RG è obbligatorio solo per le macro non di appello
+    if (formData.macroType !== 'appello-lungo' && formData.macroType !== 'appello-breve') {
+      if (!formData.rg) {
+        setError('Il ruolo generale è obbligatorio');
+        return false;
+      }
+      
+      if (!formData.rg.match(/^\d{1,6}\/\d{4}$/)) {
+        setError('Formato RG non valido. Usa il formato: 123/2025');
+        return false;
+      }
+    } else {
+      // Per le macro di appello, se RG è fornito deve essere nel formato corretto
+      if (formData.rg && !formData.rg.match(/^\d{1,6}\/\d{4}$/)) {
+        setError('Formato RG non valido. Usa il formato: 123/2025');
+        return false;
+      }
     }
     
     return true;
@@ -267,10 +279,12 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
                 </select>
               </div>
 
-              {/* Data udienza */}
+              {/* Data udienza/pubblicazione/notifica */}
               <div>
                 <label htmlFor="hearingDate" className="block text-sm font-medium text-gray-700">
-                  Data Udienza*
+                  {formData.macroType === 'appello-lungo' ? 'Data pubblicazione sentenza*' :
+                   formData.macroType === 'appello-breve' ? 'Data notifica sentenza*' :
+                   'Data Udienza*'}
                 </label>
                 <input
                   type="date"
@@ -362,7 +376,9 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
 
                   <div>
                     <label htmlFor="rg" className="block text-sm font-medium text-gray-700">
-                      Ruolo Generale*
+                      Ruolo Generale{(formData.macroType === 'appello-lungo' || formData.macroType === 'appello-breve') ? '' : '*'}
+                      {(formData.macroType === 'appello-lungo' || formData.macroType === 'appello-breve') && 
+                        <span className="text-xs text-gray-500"> (facoltativo per appelli)</span>}
                     </label>
                     <input
                       type="text"
@@ -370,7 +386,7 @@ export const MacroDeadlineForm: React.FC<MacroDeadlineFormProps> = ({ onClose, o
                       name="rg"
                       value={formData.rg}
                       onChange={handleChange}
-                      required
+                      required={formData.macroType !== 'appello-lungo' && formData.macroType !== 'appello-breve'}
                       placeholder="123/2025"
                       className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 sm:text-sm"
                     />

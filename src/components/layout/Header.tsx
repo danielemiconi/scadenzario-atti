@@ -1,10 +1,13 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTenant } from '../../contexts/TenantContext';
+import { TenantPicker } from '../tenant/TenantPicker';
 import { useTrashCount } from '../../hooks/useTrashCount';
 
 export const Header: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, tenants } = useAuth();
+  const { userRole } = useTenant();
   const { trashCount } = useTrashCount();
   const navigate = useNavigate();
 
@@ -44,7 +47,7 @@ export const Header: React.FC = () => {
               Legenda
             </Link>
             
-            {(user?.role === 'admin' || user?.email === 'daniele.miconi@iblegal.it') && (
+            {(userRole === 'admin' || user?.email === 'daniele.miconi@iblegal.it') && (
               <>
                 <Link
                   to="/admin"
@@ -72,7 +75,10 @@ export const Header: React.FC = () => {
               </>
             )}
             
-            <div className="flex items-center space-x-2 ml-4 pl-4 border-l border-gray-200">
+            <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-gray-200">
+              {tenants && tenants.length > 1 && (
+                <TenantPicker className="mr-2" showLabel={false} />
+              )}
               <span className="text-sm text-gray-600">
                 {user?.name} ({user?.initials})
               </span>

@@ -6,12 +6,18 @@ import { type User } from '../types';
 import { runDataMigration } from '../utils/adminUtils';
 import { ExportModal } from '../components/admin/ExportModal';
 import { ImportModal } from '../components/admin/ImportModal';
+import { PendingUsers } from '../components/admin/PendingUsers';
+import { TenantUsersManager } from '../components/admin/TenantUsersManager';
+import { InviteUserModal } from '../components/tenant/InviteUserModal';
+import { useTenant } from '../contexts/TenantContext';
 
 export const AdminPage: React.FC = () => {
+  const { currentTenant } = useTenant();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'users' | 'data' | 'system'>('users');
 
   useEffect(() => {
@@ -71,8 +77,28 @@ export const AdminPage: React.FC = () => {
       case 'users':
         return (
           <div className="px-4 py-5 sm:px-6">
-            <h4 className="text-md font-medium text-gray-900 mb-4">Gestione Utenti</h4>
-            
+            <div className="flex justify-between items-center mb-6">
+              <h4 className="text-md font-medium text-gray-900">Gestione Utenti</h4>
+              <button
+                onClick={() => setInviteModalOpen(true)}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
+              >
+                Invita Nuovo Utente
+              </button>
+            </div>
+
+            {/* Pending Users Section */}
+            <div className="mb-8">
+              <PendingUsers />
+            </div>
+
+            {/* Active Tenant Users Management */}
+            <div className="mb-8">
+              <TenantUsersManager />
+            </div>
+
+            <h4 className="text-md font-medium text-gray-900 mb-4">Tutti gli Utenti del Sistema (Legacy)</h4>
+
             {loading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
@@ -290,6 +316,14 @@ export const AdminPage: React.FC = () => {
       <ImportModal
         isOpen={importModalOpen}
         onClose={() => setImportModalOpen(false)}
+      />
+      <InviteUserModal
+        isOpen={inviteModalOpen}
+        onClose={() => setInviteModalOpen(false)}
+        onSuccess={() => {
+          setInviteModalOpen(false);
+          // Reload pending users will happen automatically in PendingUsers component
+        }}
       />
     </div>
   );

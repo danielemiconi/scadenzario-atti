@@ -9,7 +9,9 @@ export interface User {
   name: string;
   email: string;
   initials: string;
-  role: UserRole;
+  role: UserRole; // Legacy role, will be deprecated
+  defaultTenant?: string;
+  lastSelectedTenant?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -122,7 +124,7 @@ export interface DeadlineFilter {
 // Macro deadline interface
 export interface MacroDeadline {
   type: 'macro';
-  macroType: '171-ter' | '189' | '281-duodecies';
+  macroType: '171-ter' | '189' | '281-duodecies' | 'appello-lungo' | 'appello-breve';
   hearingDate: Date;
   commonData: {
     ownerInitials: string;
@@ -146,13 +148,50 @@ export interface BatchDeadlineResult {
   }>;
 }
 
+// Tenant interfaces
+export type TenantPlan = 'free' | 'pro' | 'enterprise';
+export type TenantUserRole = 'admin' | 'editor' | 'viewer';
+export type TenantUserStatus = 'active' | 'invited' | 'suspended';
+
+export interface Tenant {
+  id?: string;
+  name: string;
+  plan?: TenantPlan;
+  active: boolean;
+  createdAt: Timestamp;
+  createdBy: string;
+  updatedAt?: Timestamp;
+}
+
+export interface TenantUser {
+  uid: string;
+  role: TenantUserRole;
+  status: TenantUserStatus;
+  joinedAt: Timestamp;
+  invitedBy?: string;
+  invitedAt?: Timestamp;
+}
+
 // Auth context interface
 export interface AuthContextType {
   user: User | null;
+  tenants: string[] | null; // List of tenant IDs user belongs to
   loading: boolean;
   error: Error | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<void>;
+  refreshToken: () => Promise<void>;
+}
+
+// Tenant context interface
+export interface TenantContextType {
+  currentTenant: string | null;
+  tenantData: Tenant | null;
+  userRole: TenantUserRole | null;
+  loading: boolean;
+  error: Error | null;
+  setCurrentTenant: (tenantId: string) => Promise<void>;
+  clearCurrentTenant: () => void;
 }

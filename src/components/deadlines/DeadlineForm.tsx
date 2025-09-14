@@ -284,6 +284,7 @@ export const DeadlineForm: React.FC<DeadlineFormProps> = ({ deadline, isCloning 
                 <option value="CASS. PEN.">CASS. PEN.</option>
                 <option value="T.A.R.">T.A.R.</option>
                 <option value="C.D.S.">C.D.S.</option>
+                <option value="C.G.U.E.">C.G.U.E.</option>
                 <option value="CORTE GIUST.  TRIB. I°">CORTE GIUST.  TRIB. I°</option>
                 <option value="CORTE GIUST.  TRIB. II°.">CORTE GIUST.  TRIB. II°.</option>
               </select>

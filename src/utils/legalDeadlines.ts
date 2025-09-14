@@ -1,6 +1,6 @@
-import { subDays, isWeekend, format, addDays, getYear, getMonth, getDate } from 'date-fns';
+import { subDays, isWeekend, format, addDays, addMonths, getYear, getMonth, getDate } from 'date-fns';
 
-export type MacroType = '171-ter' | '189' | '281-duodecies';
+export type MacroType = '171-ter' | '189' | '281-duodecies' | 'appello-lungo' | 'appello-breve';
 
 export interface DeadlineCalculation {
   type: string;
@@ -157,6 +157,103 @@ function calculateCalendarDaysBackward(
 }
 
 /**
+ * Calcola una scadenza aggiungendo giorni di CALENDARIO dalla data di partenza,
+ * considerando opzionalmente la sospensione feriale.
+ * 
+ * Usato per gli atti di appello dove si conta in avanti dalla data di notifica/pubblicazione.
+ */
+function calculateCalendarDaysForward(
+  startDate: Date,
+  daysForward: number,
+  includeSummerSuspension: boolean = false
+): Date {
+  let remainingDays = daysForward;
+  let currentDate = new Date(startDate);
+  currentDate.setHours(0, 0, 0, 0);
+  
+  // Conta in avanti giorno per giorno (TUTTI i giorni, non solo lavorativi)
+  while (remainingDays > 0) {
+    currentDate = addDays(currentDate, 1);
+    
+    // Se la sospensione feriale è attiva e siamo entrati in agosto
+    if (includeSummerSuspension && isInSummerSuspension(currentDate)) {
+      // Salta tutto agosto andando al 1° settembre
+      const year = getYear(currentDate);
+      currentDate = new Date(year, 8, 1); // 1 settembre
+      // Il 1° settembre deve essere contato come giorno valido
+      remainingDays--;
+      continue;
+    }
+    
+    // Conta OGNI giorno (inclusi weekend e festivi) purché non sia agosto sospeso
+    remainingDays--;
+  }
+  
+  // SOLO ORA applica il criterio prudenziale:
+  // se la data finale cade in giorno non lavorativo, posticipare al prossimo giorno utile
+  while (isWeekend(currentDate) || 
+         isItalianHoliday(currentDate) || 
+         (includeSummerSuspension && isInSummerSuspension(currentDate))) {
+    
+    if (includeSummerSuspension && isInSummerSuspension(currentDate)) {
+      // Se siamo finiti in agosto, saltiamo al 1° settembre
+      const year = getYear(currentDate);
+      currentDate = new Date(year, 8, 1);
+    } else {
+      // Altrimenti posticipamo di un giorno
+      currentDate = addDays(currentDate, 1);
+    }
+  }
+  
+  return currentDate;
+}
+
+/**
+ * Calcola una scadenza aggiungendo mesi dalla data di partenza,
+ * considerando opzionalmente la sospensione feriale.
+ * 
+ * Usato per l'appello con termine lungo (6 mesi dalla pubblicazione).
+ * Se la sospensione feriale è attiva e la data di partenza cade in agosto,
+ * il conteggio inizia dal 1° settembre.
+ */
+function calculateMonthsForward(
+  startDate: Date,
+  monthsForward: number,
+  includeSummerSuspension: boolean = false
+): Date {
+  let currentDate = new Date(startDate);
+  currentDate.setHours(0, 0, 0, 0);
+  
+  // Se la sospensione feriale è attiva e la data di partenza cade in agosto,
+  // il conteggio dei mesi inizia dal 1° settembre
+  if (includeSummerSuspension && isInSummerSuspension(currentDate)) {
+    const year = getYear(currentDate);
+    currentDate = new Date(year, 8, 1); // 1° settembre - da qui inizia il conteggio
+  }
+  
+  // Aggiungi i mesi dalla data di inizio effettiva
+  currentDate = addMonths(currentDate, monthsForward);
+  
+  // Applica il criterio prudenziale:
+  // se la data finale cade in giorno non lavorativo, posticipare al prossimo giorno utile
+  while (isWeekend(currentDate) || 
+         isItalianHoliday(currentDate) || 
+         (includeSummerSuspension && isInSummerSuspension(currentDate))) {
+    
+    if (includeSummerSuspension && isInSummerSuspension(currentDate)) {
+      // Se siamo finiti in agosto, saltiamo al 1° settembre
+      const yearLoop = getYear(currentDate);
+      currentDate = new Date(yearLoop, 8, 1);
+    } else {
+      // Altrimenti posticipamo di un giorno
+      currentDate = addDays(currentDate, 1);
+    }
+  }
+  
+  return currentDate;
+}
+
+/**
  * Calcola le scadenze per l'articolo 171-ter C.P.C.
  * - Prima memoria integrativa: 40 giorni (di calendario) prima dell'udienza
  * - Seconda memoria integrativa: 20 giorni (di calendario) prima dell'udienza
@@ -243,6 +340,40 @@ export function calculate281DuodeciesDeadlines(config: MacroConfig): DeadlineCal
 }
 
 /**
+ * Calcola la scadenza per l'atto di appello con termine lungo
+ * - Termine di 6 mesi dalla data di pubblicazione della sentenza (art. 325 C.P.C.)
+ */
+export function calculateAppealLongDeadline(config: MacroConfig): DeadlineCalculation[] {
+  const { hearingDate, includeSummerSuspension } = config;
+  
+  return [
+    {
+      type: 'ATTO DI APPELLO (TERMINE LUNGO)',
+      description: 'Atto di appello da depositare entro 6 mesi dalla pubblicazione della sentenza',
+      date: calculateMonthsForward(hearingDate, 6, includeSummerSuspension),
+      daysFromHearing: 0 // Non è riferito a una data udienza ma alla data di pubblicazione
+    }
+  ];
+}
+
+/**
+ * Calcola la scadenza per l'atto di appello con termine breve
+ * - Termine di 30 giorni dalla data di notifica della sentenza (art. 325 C.P.C.)
+ */
+export function calculateAppealShortDeadline(config: MacroConfig): DeadlineCalculation[] {
+  const { hearingDate, includeSummerSuspension } = config;
+  
+  return [
+    {
+      type: 'ATTO DI APPELLO (TERMINE BREVE)',
+      description: 'Atto di appello da depositare entro 30 giorni dalla notifica della sentenza',
+      date: calculateCalendarDaysForward(hearingDate, 30, includeSummerSuspension),
+      daysFromHearing: 0 // Non è riferito a una data udienza ma alla data di notifica
+    }
+  ];
+}
+
+/**
  * Calcola le scadenze in base al tipo di macro selezionato
  */
 export function calculateMacroDeadlines(config: MacroConfig): DeadlineCalculation[] {
@@ -253,6 +384,10 @@ export function calculateMacroDeadlines(config: MacroConfig): DeadlineCalculatio
       return calculate189Deadlines(config);
     case '281-duodecies':
       return calculate281DuodeciesDeadlines(config);
+    case 'appello-lungo':
+      return calculateAppealLongDeadline(config);
+    case 'appello-breve':
+      return calculateAppealShortDeadline(config);
     default:
       throw new Error(`Tipo di macro non supportato: ${config.type}`);
   }

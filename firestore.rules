@@ -5,100 +5,181 @@ service cloud.firestore {
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    function isAdmin() {
+
+    // Multi-tenant functions
+    function inTenant(tenantId) {
+      return isAuthenticated() &&
+             request.auth.token.tenants != null &&
+             tenantId in request.auth.token.tenants;
+    }
+
+    function getTenantRole(tenantId) {
+      return isSuperAdmin() ? 'admin' :
+             (tenantUserExists(tenantId) ?
+              get(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid)).data.role :
+              'viewer');
+    }
+
+    function isTenantAdmin(tenantId) {
+      return isSuperAdmin() || (inTenant(tenantId) && getTenantRole(tenantId) == 'admin');
+    }
+
+    function isSuperAdmin() {
+      return request.auth.token.email == 'daniele.miconi@iblegal.it';
+    }
+
+    function getTenantUserData(tenantId) {
+      return get(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid)).data;
+    }
+
+    function tenantUserExists(tenantId) {
+      return exists(/databases/$(database)/documents/tenants/$(tenantId)/users/$(request.auth.uid));
+    }
+
+    function isActiveInTenant(tenantId) {
+      return isSuperAdmin() ||
+             (inTenant(tenantId) &&
+              (!tenantUserExists(tenantId) || getTenantUserData(tenantId).status == 'active'));
+    }
+
+    function canReadTenant(tenantId) {
+      return isSuperAdmin() ||
+             (isActiveInTenant(tenantId) &&
+              getTenantRole(tenantId) in ['admin', 'editor', 'viewer']);
+    }
+
+    function canWriteTenant(tenantId) {
+      return isSuperAdmin() ||
+             (isActiveInTenant(tenantId) &&
+              getTenantRole(tenantId) in ['admin', 'editor']);
+    }
+
+    // Legacy admin check (will be deprecated)
+    function isLegacyAdmin() {
       return isAuthenticated() && (
         request.auth.token.role == 'admin' ||
-        (request.auth.token.email == 'daniele.miconi@iblegal.it') ||
+        request.auth.token.email == 'daniele.miconi@iblegal.it' ||
         getUserData().role == 'admin'
       );
     }
-    
+
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
-    
-    function isOwnerOrAssigned(deadline) {
-      let userData = getUserData();
-      return isAuthenticated() && (
-        deadline.createdBy == request.auth.uid ||
-        deadline.ownerInitials == userData.initials
-      );
-    }
-    
+
+    // Validation functions
     function hasValidDeadlineData() {
       let data = request.resource.data;
-      return data.keys().hasAll(['monthYear', 'ownerInitials', 'matter', 'court', 
+      return data.keys().hasAll(['monthYear', 'ownerInitials', 'matter', 'court',
                                   'rg', 'actType', 'hearingDate', 'createdBy']) &&
              data.rg.matches('^[0-9]{1,6}/[0-9]{4}$') &&
              data.monthYear.matches('^[0-9]{4}-[0-9]{2}$');
     }
-    
+
     function hasValidArchiveFields() {
       let data = request.resource.data;
-      // When archiving, ensure proper archive fields are set
-      return !data.keys().hasAny(['archived']) || 
+      return !data.keys().hasAny(['archived']) ||
              (data.archived == true && data.keys().hasAll(['archivedAt', 'archivedBy'])) ||
              (data.archived == false);
     }
-    
+
     function hasValidDeleteFields() {
       let data = request.resource.data;
-      // When soft deleting, ensure proper delete fields are set
-      return !data.keys().hasAny(['deleted']) || 
+      return !data.keys().hasAny(['deleted']) ||
              (data.deleted == true && data.keys().hasAll(['deletedAt', 'deletedBy'])) ||
              (data.deleted == false);
     }
-    
-    function isNotDuplicate() {
-      // Check for duplicate based on court, rg, actType, hearingDate
-      let data = request.resource.data;
-      return !exists(/databases/$(database)/documents/deadlines/$(data.court + '_' + data.rg + '_' + data.actType + '_' + data.hearingDate));
+
+    // ===== TENANT COLLECTIONS =====
+
+    // Tenant metadata
+    match /tenants/{tenantId} {
+      allow read: if canReadTenant(tenantId);
+      allow create: if false; // Only via Cloud Functions
+      allow update: if isTenantAdmin(tenantId) &&
+                       request.resource.data.keys().hasAll(['name', 'active']);
+      allow delete: if false; // Never delete tenants
     }
-    
-    // Users collection rules
-    match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if request.auth.uid == userId && 
-                       request.resource.data.keys().hasAll(['name', 'email', 'initials', 'role']);
-      allow update: if request.auth.uid == userId || isAdmin();
-      allow delete: if false; // No user deletion allowed
+
+    // Tenant users
+    match /tenants/{tenantId}/users/{userId} {
+      allow read: if canReadTenant(tenantId);
+      allow create: if false; // Only via Cloud Functions (invites)
+      allow update: if isTenantAdmin(tenantId) &&
+                       request.resource.data.keys().hasAll(['role', 'status']);
+      allow delete: if isTenantAdmin(tenantId);
     }
-    
-    // Legend collection rules
-    match /legend/{docId} {
-      allow read: if isAuthenticated();
-      allow create, update: if isAdmin() && 
-                               request.resource.data.keys().hasAll(['initials', 'fullName', 'active']);
-      allow delete: if isAdmin();
-    }
-    
-    // Deadlines collection rules
-    match /deadlines/{deadlineId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && 
+
+    // Tenant deadlines
+    match /tenants/{tenantId}/deadlines/{deadlineId} {
+      allow read: if canReadTenant(tenantId);
+      allow create: if canWriteTenant(tenantId) &&
                        hasValidDeadlineData() &&
                        hasValidArchiveFields() &&
                        hasValidDeleteFields() &&
                        request.resource.data.createdBy == request.auth.uid;
-      allow update: if (isAdmin() || isOwnerOrAssigned(resource.data)) &&
+      allow update: if canWriteTenant(tenantId) &&
                        hasValidDeadlineData() &&
                        hasValidArchiveFields() &&
                        hasValidDeleteFields();
-      allow delete: if isAdmin(); // Only admin can hard delete - no additional validation needed
+      allow delete: if isTenantAdmin(tenantId);
     }
-    
-    // Audit logs collection (write-only for system, read for admins)
+
+    // Tenant legend
+    match /tenants/{tenantId}/legend/{docId} {
+      allow read: if canReadTenant(tenantId);
+      allow create, update: if canWriteTenant(tenantId) &&
+                               request.resource.data.keys().hasAll(['initials', 'fullName', 'active']);
+      allow delete: if isTenantAdmin(tenantId);
+    }
+
+    // Tenant audit logs (read-only)
+    match /tenants/{tenantId}/auditLogs/{logId} {
+      allow read: if isTenantAdmin(tenantId);
+      allow write: if false; // Only Cloud Functions can write
+    }
+
+    // Tenant notifications (read-only)
+    match /tenants/{tenantId}/notifications/{notificationId} {
+      allow read: if isTenantAdmin(tenantId) ||
+                     (canReadTenant(tenantId) && resource.data.userId == request.auth.uid);
+      allow write: if false; // Only Cloud Functions can write
+    }
+
+    // ===== LEGACY COLLECTIONS (for backward compatibility) =====
+
+    // Users collection (lightweight profiles)
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if request.auth.uid == userId &&
+                       request.resource.data.keys().hasAll(['name', 'email', 'initials']);
+      allow update: if request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // Legacy deadlines (will be migrated)
+    match /deadlines/{deadlineId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Block writes to force migration
+    }
+
+    // Legacy legend (will be migrated)
+    match /legend/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Block writes to force migration
+    }
+
+    // Legacy audit logs
     match /auditLogs/{logId} {
-      allow read: if isAdmin();
-      allow write: if false; // Only Cloud Functions can write
+      allow read: if isLegacyAdmin();
+      allow write: if false;
     }
-    
-    // Notifications collection (for tracking sent notifications)
+
+    // Legacy notifications
     match /notifications/{notificationId} {
-      allow read: if isAdmin() || 
+      allow read: if isLegacyAdmin() ||
                      (isAuthenticated() && resource.data.userId == request.auth.uid);
-      allow write: if false; // Only Cloud Functions can write
+      allow write: if false;
     }
   }
 }

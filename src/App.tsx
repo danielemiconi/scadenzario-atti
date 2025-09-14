@@ -1,7 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
+import { TenantProvider } from './contexts/TenantContext';
 import { PrivateRoute } from './components/auth/PrivateRoute';
+import { RequireTenant } from './components/tenant/RequireTenant';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
 import { Layout } from './components/layout/Layout';
@@ -23,58 +25,68 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/register" element={<RegisterForm />} />
-            
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            
-            <Route
-              path="/legend"
-              element={
-                <PrivateRoute>
-                  <Layout>
-                    <LegendPage />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            
-            <Route
-              path="/admin"
-              element={
-                <PrivateRoute requireAdmin>
-                  <Layout>
-                    <AdminPage />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            
-            <Route
-              path="/trash"
-              element={
-                <PrivateRoute requireAdmin>
-                  <Layout>
-                    <TrashPage />
-                  </Layout>
-                </PrivateRoute>
-              }
-            />
-            
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </Router>
+        <TenantProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/register" element={<RegisterForm />} />
+
+              <Route
+                path="/"
+                element={
+                  <PrivateRoute>
+                    <RequireTenant>
+                      <Layout>
+                        <Dashboard />
+                      </Layout>
+                    </RequireTenant>
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/legend"
+                element={
+                  <PrivateRoute>
+                    <RequireTenant>
+                      <Layout>
+                        <LegendPage />
+                      </Layout>
+                    </RequireTenant>
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/admin"
+                element={
+                  <PrivateRoute requireAdmin>
+                    <RequireTenant>
+                      <Layout>
+                        <AdminPage />
+                      </Layout>
+                    </RequireTenant>
+                  </PrivateRoute>
+                }
+              />
+
+              <Route
+                path="/trash"
+                element={
+                  <PrivateRoute requireAdmin>
+                    <RequireTenant>
+                      <Layout>
+                        <TrashPage />
+                      </Layout>
+                    </RequireTenant>
+                  </PrivateRoute>
+                }
+              />
+
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Router>
+        </TenantProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
